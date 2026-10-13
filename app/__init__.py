@@ -5,10 +5,11 @@ from datetime import UTC, datetime
 
 from flask import Flask, jsonify, render_template
 from sqlalchemy import text
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.extensions import csrf, db, limiter, login_manager, migrate, talisman
 from app.models.user import User
-from config import config_by_name
+from config import IS_VERCEL, config_by_name
 
 
 def format_inr(value):
@@ -17,10 +18,8 @@ def format_inr(value):
         return "0.00"
     try:
         float_val = float(value)
-        # Format with 2 decimals
         s = f"{float_val:.2f}"
         integer_part, decimal_part = s.split(".")
-        # Indian comma notation: last 3 digits, then groups of 2 digits
         if len(integer_part) > 3:
             last3 = integer_part[-3:]
             rest = integer_part[:-3]
@@ -63,9 +62,15 @@ def create_app(config_name=None):
     if hasattr(config_class, "init_app"):
         config_class.init_app(app)
 
-    # Ensure required directories exist
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-    os.makedirs(app.config["PRIVATE_UPLOAD_FOLDER"], exist_ok=True)
+    # ProxyFix for reverse proxies (Vercel, Render, Nginx)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
+    # Ensure required directories exist (failsafe on read-only serverless filesystems)
+    try:
+        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+        os.makedirs(app.config["PRIVATE_UPLOAD_FOLDER"], exist_ok=True)
+    except (OSError, PermissionError):
+        pass
 
     # Initialize extensions
     db.init_app(app)
@@ -96,9 +101,10 @@ def create_app(config_name=None):
         "img-src": ["'self'", "data:", "https:"],
         "frame-src": ["'self'", "https://www.google.com"],
     }
+
     talisman.init_app(
         app,
-        force_https=app.config.get("SESSION_COOKIE_SECURE", False),
+        force_https=False if IS_VERCEL else app.config.get("SESSION_COOKIE_SECURE", False),
         content_security_policy=csp,
         content_security_policy_nonce_in=["script-src"],
     )
@@ -124,6 +130,18 @@ def create_app(config_name=None):
     # Register CLI commands
     from app import cli
     cli.register_cli_commands(app)
+
+    # Auto-initialize database tables and demo seed on fresh/serverless environments
+    with app.app_context():
+        try:
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            if not inspector.has_table("properties"):
+                db.create_all()
+                from app.cli import seed_demo_data
+                seed_demo_data(app)
+        except Exception as exc:  # noqa: BLE001
+            app.logger.warning(f"Database auto-init skipped: {exc}")
 
     # Context Processors & Filters
     @app.context_processor

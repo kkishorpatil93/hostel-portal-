@@ -1,10 +1,20 @@
 """Public views: Home, Rooms catalog, Room details, Amenities, Contact, FAQ, Tour request."""
 
-from flask import Response, render_template, request
+from flask import Response, redirect, render_template, request, url_for
 
 from app.models.operations import Review
 from app.models.property import Amenity, Property, Room
 from app.public import public_bp
+
+
+@public_bp.route("/login")
+def login_redirect():
+    return redirect(url_for("auth.login"))
+
+
+@public_bp.route("/register")
+def register_redirect():
+    return redirect(url_for("auth.register"))
 
 
 @public_bp.route("/")
