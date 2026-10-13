@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile — Resident Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container" style="max-width: 700px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">My Profile</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Personal contact details, emergency contacts, and KYC information.</p>
+      </div>
+      <a href="{{ url_for('tenant.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="card">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-control" value="{{ user.full_name }}" readonly>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-control" value="{{ user.email }}" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mobile Number</label>
+          <input type="tel" class="form-control" value="+91 {{ user.phone }}" readonly>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Occupation</label>
+        <input type="text" class="form-control" value="{{ user.tenant_profile.occupation if user.tenant_profile and user.tenant_profile.occupation else 'Not specified' }}" readonly>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Emergency Contact Name & Phone</label>
+        <input type="text" class="form-control" value="{{ user.tenant_profile.emergency_contact_name if user.tenant_profile and user.tenant_profile.emergency_contact_name else 'Not specified' }} — {{ user.tenant_profile.emergency_contact_phone if user.tenant_profile else '' }}" readonly>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Permanent Address</label>
+        <textarea class="form-control" rows="2" readonly>{{ user.tenant_profile.permanent_address if user.tenant_profile and user.tenant_profile.permanent_address else 'Not specified' }}</textarea>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

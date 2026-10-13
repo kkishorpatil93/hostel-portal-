@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Requests — Owner Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">Tenant Booking Requests</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Review, approve, allocate specific beds, or reject incoming tenant applications.</p>
+      </div>
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="card table-responsive" style="padding: 0;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Booking ID</th>
+            <th>Applicant</th>
+            <th>Room</th>
+            <th>Move-in Date</th>
+            <th>Applied On</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td>#{{ b.id }}</td>
+            <td>
+              <strong>{{ b.tenant.full_name }}</strong><br>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">{{ b.tenant.email }} &bull; {{ b.tenant.phone }}</span>
+            </td>
+            <td>Room {{ b.room.room_number }} ({{ b.room.room_type }})</td>
+            <td>{{ b.requested_move_in_date|date_fmt }}</td>
+            <td>{{ b.created_at|date_fmt }}</td>
+            <td>
+              {% if b.status == 'PENDING' %}
+                <span class="badge badge-warning">Pending Review</span>
+              {% elif b.status == 'APPROVED' %}
+                <span class="badge badge-success">Approved</span>
+              {% elif b.status == 'REJECTED' %}
+                <span class="badge badge-danger">Rejected</span>
+              {% else %}
+                <span class="badge badge-neutral">{{ b.status }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              No booking requests found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

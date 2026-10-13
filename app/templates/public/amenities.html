@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Amenities & Services{% endblock %}
+
+{% block content %}
+<section style="padding: 3rem 0; background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color);">
+  <div class="container">
+    <h1 style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">Comprehensive Amenities</h1>
+    <p style="color: var(--text-muted);">Crafted for hassle-free community living with transparent, all-inclusive pricing.</p>
+  </div>
+</section>
+
+<section style="padding: 3rem 0;">
+  <div class="container">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+      {% for am in amenities %}
+      <div class="card">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">✨</div>
+        <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem;">{{ am.name }}</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">{{ am.description or 'Maintained round-the-clock for all residents.' }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

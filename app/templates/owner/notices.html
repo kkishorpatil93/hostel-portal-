@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Notice Board — Owner Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">PG Notice Board</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Publish announcements, maintenance alerts, and event updates to residents.</p>
+      </div>
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+      {% for n in notices %}
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span class="badge {{ 'badge-warning' if n.pinned else 'badge-neutral' }}">
+            {{ '📌 Pinned Notice' if n.pinned else 'Notice' }}
+          </span>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">{{ n.created_at|date_fmt }}</span>
+        </div>
+        <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-primary);">{{ n.title }}</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">{{ n.message }}</p>
+      </div>
+      {% else %}
+      <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <p style="color: var(--text-muted);">No notices currently active.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

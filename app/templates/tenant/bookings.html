@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}My Booking Requests — Resident Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">My Booking Requests</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Track the real-time status of your room reservation requests.</p>
+      </div>
+      <a href="{{ url_for('tenant.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="card table-responsive" style="padding: 0;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Booking #</th>
+            <th>Room</th>
+            <th>Requested Move-in</th>
+            <th>Submitted On</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td>#{{ b.id }}</td>
+            <td>Room {{ b.room.room_number }} ({{ b.room.room_type }})</td>
+            <td>{{ b.requested_move_in_date|date_fmt }}</td>
+            <td>{{ b.created_at|date_fmt }}</td>
+            <td>
+              {% if b.status == 'PENDING' %}
+                <span class="badge badge-warning">Pending Owner Review</span>
+              {% elif b.status == 'APPROVED' %}
+                <span class="badge badge-success">Approved</span>
+              {% elif b.status == 'REJECTED' %}
+                <span class="badge badge-danger">Rejected</span>
+              {% else %}
+                <span class="badge badge-neutral">{{ b.status }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              You have not submitted any booking requests yet. <a href="{{ url_for('public.rooms') }}">Browse rooms</a>.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

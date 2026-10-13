@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}My Rent & Payment History — Resident Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">Rent & Payments</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Monthly invoices, due dates, payment history, and downloadable receipts.</p>
+      </div>
+      <a href="{{ url_for('tenant.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="card table-responsive" style="padding: 0;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Billing Month</th>
+            <th>Amount Due</th>
+            <th>Paid</th>
+            <th>Balance</th>
+            <th>Due Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for chg in charges %}
+          <tr>
+            <td><strong>{{ chg.billing_month.strftime('%B %Y') }}</strong></td>
+            <td>{{ currency_symbol }}{{ chg.total_due|inr }}</td>
+            <td style="color: var(--color-success); font-weight: 600;">{{ currency_symbol }}{{ chg.total_paid|inr }}</td>
+            <td style="color: {{ 'var(--color-danger)' if chg.outstanding_balance > 0 else 'var(--text-muted)' }}; font-weight: 600;">
+              {{ currency_symbol }}{{ chg.outstanding_balance|inr }}
+            </td>
+            <td>{{ chg.due_date|date_fmt }}</td>
+            <td>
+              {% if chg.status == 'PAID' %}
+                <span class="badge badge-success">Paid</span>
+              {% elif chg.status == 'PARTIAL' %}
+                <span class="badge badge-warning">Partial</span>
+              {% elif chg.status == 'OVERDUE' %}
+                <span class="badge badge-danger">Overdue</span>
+              {% else %}
+                <span class="badge badge-neutral">Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              No rent charges generated yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

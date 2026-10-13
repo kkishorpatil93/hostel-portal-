@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Available Rooms & Accommodation{% endblock %}
+
+{% block content %}
+<section style="padding: 3rem 0; background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color);">
+  <div class="container">
+    <h1 style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">Explore Rooms & Beds</h1>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Choose from private single bedrooms to vibrant shared spaces.</p>
+
+    <!-- Filter Pills -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('public.rooms') }}" class="btn {{ 'btn-primary' if not selected_type else 'btn-secondary' }} btn-sm">All Types</a>
+      <a href="{{ url_for('public.rooms', type='Single') }}" class="btn {{ 'btn-primary' if 'Single' in selected_type else 'btn-secondary' }} btn-sm">Single Rooms</a>
+      <a href="{{ url_for('public.rooms', type='Double') }}" class="btn {{ 'btn-primary' if 'Double' in selected_type else 'btn-secondary' }} btn-sm">Double Sharing</a>
+      <a href="{{ url_for('public.rooms', type='Triple') }}" class="btn {{ 'btn-primary' if 'Triple' in selected_type else 'btn-secondary' }} btn-sm">Triple Sharing</a>
+    </div>
+  </div>
+</section>
+
+<section style="padding: 3rem 0;">
+  <div class="container">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+      {% for room in rooms %}
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <span class="badge badge-neutral">Floor {{ room.floor }}</span>
+            {% if room.available_beds > 0 %}
+              <span class="badge badge-success">{{ room.available_beds }} / {{ room.capacity }} Beds Available</span>
+            {% else %}
+              <span class="badge badge-danger">Fully Booked</span>
+            {% endif %}
+          </div>
+          <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">
+            Room {{ room.room_number }} ({{ room.room_type }})
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+            {{ room.description or 'Comfortable living with attached washroom, daily housekeeping, and high-speed Wi-Fi.' }}
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem;">
+            {% for amenity in room.amenities %}
+              <span class="badge badge-neutral" style="font-size: 0.75rem;">✓ {{ amenity.name }}</span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">
+              {{ currency_symbol }}{{ room.monthly_rent|inr }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Deposit: {{ currency_symbol }}{{ room.security_deposit|inr }}</div>
+          </div>
+          <a href="{{ url_for('public.room_detail', room_id=room.id) }}" class="btn btn-primary btn-sm">Inspect Room</a>
+        </div>
+      </div>
+      {% else %}
+      <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">No rooms found matching this category.</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">Try clearing your filter or schedule a visit to explore upcoming vacancies.</p>
+        <a href="{{ url_for('public.rooms') }}" class="btn btn-secondary">View All Rooms</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

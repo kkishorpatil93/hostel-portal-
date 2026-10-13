@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Tenant Directory — Owner Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">Tenant Directory</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Registered residents, contact details, emergency contacts, and sensitive KYC status.</p>
+      </div>
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="card table-responsive" style="padding: 0;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Occupation</th>
+            <th>Emergency Contact</th>
+            <th>Allocated Bed</th>
+            <th>Registered On</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tenants %}
+          <tr>
+            <td><strong>{{ t.full_name }}</strong></td>
+            <td>
+              {{ t.email }}<br>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">+91 {{ t.phone }}</span>
+            </td>
+            <td>{{ t.tenant_profile.occupation if t.tenant_profile and t.tenant_profile.occupation else '—' }}</td>
+            <td>
+              {% if t.tenant_profile and t.tenant_profile.emergency_contact_name %}
+                {{ t.tenant_profile.emergency_contact_name }} ({{ t.tenant_profile.emergency_contact_phone }})
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              {% set active_alloc = t.allocations.filter_by(status='ACTIVE').first() %}
+              {% if active_alloc %}
+                <span class="badge badge-success">Room {{ active_alloc.bed.room.room_number }} ({{ active_alloc.bed.bed_label }})</span>
+              {% else %}
+                <span class="badge badge-neutral">Unallocated</span>
+              {% endif %}
+            </td>
+            <td>{{ t.created_at|date_fmt }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              No registered tenants found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

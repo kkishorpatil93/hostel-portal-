@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Premium PG Accommodation in Bengaluru{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section" style="padding: 4rem 0; background: linear-gradient(135deg, var(--bg-surface), var(--bg-subtle)); border-bottom: 1px solid var(--border-color);">
+  <div class="container" style="display: grid; grid-template-columns: 1fr; gap: 2rem; align-items: center;">
+    <div>
+      <span class="badge badge-info" style="margin-bottom: 1rem;">✨ Modern Living in Bengaluru</span>
+      <h1 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; color: var(--color-primary); line-height: 1.2; margin-bottom: 1rem;">
+        Your Comfortable Home Away From Home
+      </h1>
+      <p style="font-size: 1.125rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 600px;">
+        Designed for ambitious students and tech professionals. Fully furnished rooms, hygienic 3-time meals, high-speed Wi-Fi, and 24/7 security in prime Koramangala.
+      </p>
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{{ url_for('public.rooms') }}" class="btn btn-primary btn-lg">Browse Available Rooms</a>
+        <a href="{{ url_for('public.tour') }}" class="btn btn-outline-primary btn-lg">Schedule a Visit</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Available Rooms Section -->
+<section style="padding: 4rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary);">Featured Living Spaces</h2>
+        <p style="color: var(--text-muted);">Real-time availability and transparent pricing. No hidden brokerage.</p>
+      </div>
+      <a href="{{ url_for('public.rooms') }}" class="btn btn-secondary">View All Rooms &rarr;</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+      {% for room in rooms %}
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <span class="badge badge-neutral">Floor {{ room.floor }}</span>
+            {% if room.available_beds > 0 %}
+              <span class="badge badge-success">{{ room.available_beds }} Bed(s) Available</span>
+            {% else %}
+              <span class="badge badge-danger">Fully Occupied</span>
+            {% endif %}
+          </div>
+          <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">
+            Room {{ room.room_number }} — {{ room.room_type }}
+          </h3>
+          <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+            {{ room.description or 'Spacious, well-ventilated accommodation with attached facilities.' }}
+          </p>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
+            {% for amenity in room.amenities %}
+              <span class="badge badge-neutral" style="font-size: 0.75rem;">✓ {{ amenity.name }}</span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">
+              {{ currency_symbol }}{{ room.monthly_rent|inr }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">per month / bed</div>
+          </div>
+          <a href="{{ url_for('public.room_detail', room_id=room.id) }}" class="btn btn-primary btn-sm">View Details</a>
+        </div>
+      </div>
+      {% else %}
+      <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <p style="color: var(--text-muted);">Rooms are being updated. Please check back shortly or schedule a tour!</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Amenities Showcase -->
+<section style="padding: 4rem 0; background-color: var(--bg-surface); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+  <div class="container">
+    <div style="text-align: center; max-width: 650px; margin: 0 auto 3rem;">
+      <h2 style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">
+        All-Inclusive Premium Amenities
+      </h2>
+      <p style="color: var(--text-muted);">Everything you need to focus on work and studies, managed by professionals.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem;">
+      {% for am in amenities %}
+      <div class="card" style="background-color: var(--bg-body);">
+        <div style="font-size: 1.75rem; margin-bottom: 0.75rem;">🌟</div>
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">{{ am.name }}</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">{{ am.description or 'Provided across all rooms.' }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials (Displayed only if approved reviews exist) -->
+{% if reviews %}
+<section style="padding: 4rem 0;">
+  <div class="container">
+    <div style="text-align: center; max-width: 650px; margin: 0 auto 3rem;">
+      <h2 style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">
+        What Our Residents Say
+      </h2>
+      <p style="color: var(--text-muted);">Real feedback from verified residents at StayNest PG.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+      {% for rev in reviews %}
+      <div class="card">
+        <div style="color: #f59e0b; margin-bottom: 0.75rem;">
+          {{ '★' * rev.rating }}{{ '☆' * (5 - rev.rating) }}
+        </div>
+        <p style="font-style: italic; color: var(--text-main); margin-bottom: 1rem; font-size: 0.95rem;">
+          "{{ rev.comment }}"
+        </p>
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+          — Verified Resident
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Tour Callout -->
+<section style="padding: 4rem 0; background-color: var(--color-primary-light);">
+  <div class="container" style="text-align: center; max-width: 700px;">
+    <h2 style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem;">
+      Want to See the PG in Person?
+    </h2>
+    <p style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 2rem;">
+      Book a free, guided room tour at your convenient time. Meet our staff, taste our food, and inspect our hygiene firsthand.
+    </p>
+    <a href="{{ url_for('public.tour') }}" class="btn btn-primary btn-lg">Schedule Your Free Visit</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Tenant Grievances & Maintenance — Owner Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">Maintenance & Grievances</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Track, triage, and resolve tenant maintenance requests and complaints.</p>
+      </div>
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="card table-responsive" style="padding: 0;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Ticket #</th>
+            <th>Tenant</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Created</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in complaints %}
+          <tr>
+            <td>#{{ c.id }}</td>
+            <td>{{ c.tenant.full_name }}</td>
+            <td><strong>{{ c.title }}</strong></td>
+            <td><span class="badge badge-neutral">{{ c.category }}</span></td>
+            <td>
+              {% if c.priority == 'Urgent' or c.priority == 'High' %}
+                <span class="badge badge-danger">{{ c.priority }}</span>
+              {% else %}
+                <span class="badge badge-neutral">{{ c.priority }}</span>
+              {% endif %}
+            </td>
+            <td>{{ c.created_at|date_fmt }}</td>
+            <td>
+              {% if c.status == 'OPEN' %}
+                <span class="badge badge-danger">Open</span>
+              {% elif c.status == 'IN_PROGRESS' %}
+                <span class="badge badge-warning">In Progress</span>
+              {% elif c.status == 'RESOLVED' %}
+                <span class="badge badge-success">Resolved</span>
+              {% else %}
+                <span class="badge badge-neutral">{{ c.status }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              No open complaints logged.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

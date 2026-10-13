@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Rooms & Beds — Owner Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">Room & Bed Inventory</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Manage room numbers, types, monthly rent, deposits, and active bed units.</p>
+      </div>
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="card table-responsive" style="padding: 0;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Room Number</th>
+            <th>Type</th>
+            <th>Floor</th>
+            <th>Monthly Rent</th>
+            <th>Security Deposit</th>
+            <th>Capacity</th>
+            <th>Available Beds</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for room in rooms %}
+          <tr>
+            <td><strong>Room {{ room.room_number }}</strong></td>
+            <td>{{ room.room_type }}</td>
+            <td>Floor {{ room.floor }}</td>
+            <td>{{ currency_symbol }}{{ room.monthly_rent|inr }}</td>
+            <td>{{ currency_symbol }}{{ room.security_deposit|inr }}</td>
+            <td>{{ room.capacity }}</td>
+            <td>
+              {% if room.available_beds > 0 %}
+                <span class="badge badge-success">{{ room.available_beds }} Free</span>
+              {% else %}
+                <span class="badge badge-danger">0 Free</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if room.is_active %}
+                <span class="badge badge-success">Active</span>
+              {% else %}
+                <span class="badge badge-neutral">Inactive</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              No rooms found in database. Seed demo data or create a room.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

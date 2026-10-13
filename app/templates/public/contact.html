@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us & Location{% endblock %}
+
+{% block content %}
+<section style="padding: 3rem 0;">
+  <div class="container" style="max-width: 900px;">
+    <h1 style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">Get in Touch</h1>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Have questions about availability, pricing, or facilities? Reach out directly.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+      <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.25rem;">Contact Information</h2>
+        <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.95rem;">
+          <div>
+            <strong>Address:</strong><br>
+            <span style="color: var(--text-muted);">{{ property.address if property else '12, 4th Cross, Koramangala 5th Block, Bengaluru, Karnataka 560095' }}</span>
+          </div>
+          <div>
+            <strong>Mobile Phone:</strong><br>
+            <span style="color: var(--text-muted);">{{ property.contact_phone if property else contact_phone }}</span>
+          </div>
+          <div>
+            <strong>Email:</strong><br>
+            <span style="color: var(--text-muted);">{{ property.contact_email if property else contact_email }}</span>
+          </div>
+          <div>
+            <strong>Visiting Hours:</strong><br>
+            <span style="color: var(--text-muted);">Monday – Sunday: 9:00 AM – 8:00 PM</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Map & Directions</h2>
+        <div style="background-color: var(--bg-subtle); border-radius: var(--radius-md); padding: 2rem; text-align: center; border: 1px dashed var(--border-color);">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">📍</div>
+          <p style="font-weight: 600; margin-bottom: 0.25rem;">StayNest PG Koramangala</p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Located within 500m of Sony World Signal & major tech parks.</p>
+          <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">Open in Google Maps</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

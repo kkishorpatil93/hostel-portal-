@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Resident Dashboard — StayNest PG{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem;">
+          Welcome, {{ current_user.full_name }}
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Manage your bed allocation, pending rent dues, maintenance requests, and announcements.</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('tenant.profile') }}" class="btn btn-secondary btn-sm">My Profile</a>
+        <a href="{{ url_for('tenant.payments') }}" class="btn btn-secondary btn-sm">Rent & Payments</a>
+        <a href="{{ url_for('tenant.complaints') }}" class="btn btn-secondary btn-sm">Complaints</a>
+      </div>
+    </div>
+
+    <!-- Active Bed Allocation Hero Card -->
+    {% if allocation %}
+    <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, var(--bg-surface), var(--bg-subtle)); border-left: 4px solid var(--color-primary);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <span class="badge badge-success" style="margin-bottom: 0.5rem;">Active Stay</span>
+          <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">
+            Room {{ allocation.bed.room.room_number }} &bull; {{ allocation.bed.bed_label }}
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+            {{ allocation.bed.room.room_type }} &bull; Checked in on {{ allocation.start_date|date_fmt }}
+          </p>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">
+            {{ currency_symbol }}{{ allocation.monthly_rent_snapshot|inr }}
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Agreed Monthly Rent</span>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card" style="margin-bottom: 2rem; border-left: 4px solid var(--color-warning);">
+      <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">No Active Room Allocation</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">
+        You currently do not have an active bed assigned. Browse available rooms or check your submitted booking requests.
+      </p>
+      <a href="{{ url_for('public.rooms') }}" class="btn btn-primary btn-sm">Browse Available Rooms</a>
+    </div>
+    {% endif %}
+
+    <!-- 3 Column Quick Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+      <!-- Pending Rent Dues -->
+      <div class="card">
+        <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem; color: var(--color-primary);">Rent & Invoices</h3>
+        {% if pending_charges %}
+          {% for chg in pending_charges %}
+          <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong>{{ chg.billing_month.strftime('%B %Y') }}</strong><br>
+              <span style="font-size: 0.8rem; color: var(--color-danger);">Due by {{ chg.due_date|date_fmt }}</span>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-weight: 700; color: var(--color-danger);">{{ currency_symbol }}{{ chg.outstanding_balance|inr }}</span><br>
+              <a href="{{ url_for('tenant.payments') }}" class="btn btn-primary btn-sm" style="margin-top: 0.25rem; padding: 0.2rem 0.6rem; font-size: 0.75rem;">Pay / Details</a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p style="color: var(--color-success); font-size: 0.9rem;">✓ No outstanding dues. You are all caught up!</p>
+        {% endif %}
+      </div>
+
+      <!-- Maintenance Requests -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 600; color: var(--color-primary);">Recent Complaints</h3>
+          <a href="{{ url_for('tenant.complaints') }}" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none;">View All</a>
+        </div>
+        {% if complaints %}
+          {% for c in complaints %}
+          <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 0.9rem; font-weight: 600;">{{ c.title }}</div>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">{{ c.created_at|date_fmt }}</span>
+            </div>
+            <span class="badge {{ 'badge-success' if c.status == 'RESOLVED' else 'badge-warning' }}">{{ c.status }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p style="color: var(--text-muted); font-size: 0.9rem;">No active maintenance tickets.</p>
+        {% endif %}
+      </div>
+
+      <!-- PG Notices -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 600; color: var(--color-primary);">Notice Board</h3>
+          <a href="{{ url_for('tenant.notices') }}" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none;">View All</a>
+        </div>
+        {% if notices %}
+          {% for n in notices %}
+          <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+            <div style="font-size: 0.9rem; font-weight: 600; color: var(--color-primary);">{{ n.title }}</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">{{ n.message|truncate(80) }}</p>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p style="color: var(--text-muted); font-size: 0.9rem;">No announcements at this time.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

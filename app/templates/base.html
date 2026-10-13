@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ site_title }}{% endblock %} — StayNest PG</title>
+  <meta name="description" content="StayNest PG: Premium, hygienic, and secure accommodation for students and working professionals in Bengaluru with 3-time meals, Wi-Fi, and 24/7 security.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="container header-container">
+      <a href="{{ url_for('public.index') }}" class="brand-logo">
+        <span class="brand-icon">🏠</span>
+        <span class="brand-text"><strong>StayNest</strong> PG</span>
+      </a>
+
+      <nav class="nav-links" id="main-nav" aria-label="Main Navigation">
+        <a href="{{ url_for('public.index') }}" class="nav-item">Home</a>
+        <a href="{{ url_for('public.rooms') }}" class="nav-item">Rooms</a>
+        <a href="{{ url_for('public.amenities') }}" class="nav-item">Amenities</a>
+        <a href="{{ url_for('public.about') }}" class="nav-item">About</a>
+        <a href="{{ url_for('public.contact') }}" class="nav-item">Contact</a>
+        <a href="{{ url_for('public.tour') }}" class="nav-item btn btn-outline-primary btn-sm">Book Tour</a>
+      </nav>
+
+      <div class="header-actions">
+        <button id="theme-toggle" class="btn btn-icon" title="Toggle theme" aria-label="Toggle light or dark theme">
+          <span class="theme-icon">🌙</span>
+        </button>
+
+        {% if current_user.is_authenticated %}
+          {% if current_user.is_owner %}
+            <a href="{{ url_for('owner.dashboard') }}" class="btn btn-primary btn-sm">Owner Portal</a>
+          {% else %}
+            <a href="{{ url_for('tenant.dashboard') }}" class="btn btn-primary btn-sm">My Dashboard</a>
+          {% endif %}
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Sign Out</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Sign In</a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
+        {% endif %}
+
+        <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open navigation menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="main-content">
+    <div class="container flash-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">
+              <span>{{ message }}</span>
+              <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Close message">&times;</button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <h3 class="footer-title">StayNest PG</h3>
+        <p class="footer-text">Thoughtfully curated living spaces designed for comfort, productivity, and community. High-speed Wi-Fi, hygienic meals, and zero-stress living.</p>
+        <p class="footer-contact"><strong>Phone:</strong> {{ contact_phone }}<br><strong>Email:</strong> {{ contact_email }}</p>
+      </div>
+      <div class="footer-col">
+        <h4 class="footer-subtitle">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('public.rooms') }}">Browse Rooms</a></li>
+          <li><a href="{{ url_for('public.amenities') }}">Amenities</a></li>
+          <li><a href="{{ url_for('public.tour') }}">Schedule a Visit</a></li>
+          <li><a href="{{ url_for('public.faq') }}">Frequently Asked Questions</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4 class="footer-subtitle">Legal & Policies</h4>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('public.privacy') }}">Privacy Policy</a></li>
+          <li><a href="{{ url_for('public.terms') }}">Terms & House Rules</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; {{ current_year }} StayNest PG. All rights reserved. Regional defaults: INR (₹) | Asia/Kolkata.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

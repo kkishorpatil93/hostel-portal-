@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Property & Site Settings — Owner Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container" style="max-width: 800px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">Property & Site Settings</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Configure contact numbers, property rules, and regional operational defaults.</p>
+      </div>
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="card">
+      <form method="POST" action="#">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <label class="form-label">Property Name</label>
+          <input type="text" class="form-control" value="{{ property.name if property else site_title }}" readonly>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <input type="text" class="form-control" value="{{ property.contact_phone if property else contact_phone }}" readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Email</label>
+            <input type="email" class="form-control" value="{{ property.contact_email if property else contact_email }}" readonly>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <input type="text" class="form-control" value="{{ property.address if property else 'Koramangala, Bengaluru' }}" readonly>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">House Rules</label>
+          <textarea class="form-control" rows="3" readonly>{{ property.rules if property else 'Gate locks at 11 PM. Visitors in lounge.' }}</textarea>
+        </div>
+
+        <div class="alert alert-info" style="margin-top: 1rem;">
+          Dynamic settings can be updated here in future phases.
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

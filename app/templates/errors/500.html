@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Internal Server Error (500){% endblock %}
+
+{% block content %}
+<section class="error-page container">
+  <div class="error-card">
+    <div class="error-badge error-badge-danger">500</div>
+    <h1 class="error-heading">Something Went Wrong</h1>
+    <p class="error-text">An unexpected server error occurred. Our engineering team has been notified. Please try again shortly.</p>
+    <div class="error-actions">
+      <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return to Homepage</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

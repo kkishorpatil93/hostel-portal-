@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}My Maintenance Grievances — Resident Portal{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">Grievances & Maintenance</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Raise and track maintenance requests directly with the PG management.</p>
+      </div>
+      <a href="{{ url_for('tenant.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="card table-responsive" style="padding: 0;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Ticket #</th>
+            <th>Subject</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Date Raised</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in complaints %}
+          <tr>
+            <td>#{{ c.id }}</td>
+            <td><strong>{{ c.title }}</strong></td>
+            <td><span class="badge badge-neutral">{{ c.category }}</span></td>
+            <td>{{ c.priority }}</td>
+            <td>{{ c.created_at|date_fmt }}</td>
+            <td>
+              {% if c.status == 'RESOLVED' %}
+                <span class="badge badge-success">Resolved</span>
+              {% elif c.status == 'IN_PROGRESS' %}
+                <span class="badge badge-warning">In Progress</span>
+              {% else %}
+                <span class="badge badge-danger">Open</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              You have not submitted any complaints.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

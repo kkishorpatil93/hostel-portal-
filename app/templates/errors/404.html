@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found (404){% endblock %}
+
+{% block content %}
+<section class="error-page container">
+  <div class="error-card">
+    <div class="error-badge">404</div>
+    <h1 class="error-heading">Page Not Found</h1>
+    <p class="error-text">The page or resource you are looking for does not exist, has been removed, or is restricted.</p>
+    <div class="error-actions">
+      <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return to Homepage</a>
+      <a href="{{ url_for('public.rooms') }}" class="btn btn-secondary">Browse Available Rooms</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

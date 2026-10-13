@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Access Restricted (403){% endblock %}
+
+{% block content %}
+<section class="error-page container">
+  <div class="error-card">
+    <div class="error-badge">403</div>
+    <h1 class="error-heading">Access Denied</h1>
+    <p class="error-text">You do not have administrative permission to view this resource.</p>
+    <div class="error-actions">
+      <a href="{{ url_for('public.index') }}" class="btn btn-primary">Go to Home</a>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Sign In as Different User</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

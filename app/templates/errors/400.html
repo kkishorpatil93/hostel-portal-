@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Bad Request (400){% endblock %}
+
+{% block content %}
+<section class="error-page container">
+  <div class="error-card">
+    <div class="error-badge">400</div>
+    <h1 class="error-heading">Bad Request</h1>
+    <p class="error-text">The request could not be processed due to invalid parameters or expired security tokens.</p>
+    <div class="error-actions">
+      <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return to Homepage</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Owner Administrative Dashboard{% endblock %}
+
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem;">Owner Dashboard</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Real-time PG occupancy, operations, and resident financial metrics.</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('owner.rooms') }}" class="btn btn-secondary btn-sm">Manage Rooms</a>
+        <a href="{{ url_for('owner.bookings') }}" class="btn btn-secondary btn-sm">Bookings</a>
+        <a href="{{ url_for('owner.rent') }}" class="btn btn-secondary btn-sm">Rent & Billing</a>
+        <a href="{{ url_for('owner.settings') }}" class="btn btn-secondary btn-sm">Settings</a>
+      </div>
+    </div>
+
+    <!-- Quick Stats Cards Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+      <div class="card">
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Total Bed Capacity</span>
+        <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin: 0.5rem 0;">{{ total_beds }}</div>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Across {{ total_rooms }} active rooms</span>
+      </div>
+
+      <div class="card">
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Occupancy Rate</span>
+        <div style="font-size: 2rem; font-weight: 700; color: var(--color-success); margin: 0.5rem 0;">{{ occupancy_pct }}%</div>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">{{ occupied_beds }} beds occupied, {{ available_beds }} free</span>
+      </div>
+
+      <div class="card">
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Pending Bookings</span>
+        <div style="font-size: 2rem; font-weight: 700; color: {{ 'var(--color-warning)' if pending_bookings > 0 else 'var(--color-primary)' }}; margin: 0.5rem 0;">
+          {{ pending_bookings }}
+        </div>
+        <a href="{{ url_for('owner.bookings') }}" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none;">Review requests &rarr;</a>
+      </div>
+
+      <div class="card">
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Open Complaints</span>
+        <div style="font-size: 2rem; font-weight: 700; color: {{ 'var(--color-danger)' if open_complaints > 0 else 'var(--color-primary)' }}; margin: 0.5rem 0;">
+          {{ open_complaints }}
+        </div>
+        <a href="{{ url_for('owner.complaints') }}" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none;">View complaints &rarr;</a>
+      </div>
+    </div>
+
+    <!-- Quick Operations Panels -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+      <div class="card">
+        <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;">Administrative Actions</h2>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <a href="{{ url_for('owner.bookings') }}" class="btn btn-outline-primary" style="justify-content: flex-start;">
+            📋 Review Booking Requests ({{ pending_bookings }})
+          </a>
+          <a href="{{ url_for('owner.rent') }}" class="btn btn-outline-primary" style="justify-content: flex-start;">
+            💰 Monthly Rent Charges & Offline Payment Entry
+          </a>
+          <a href="{{ url_for('owner.notices') }}" class="btn btn-outline-primary" style="justify-content: flex-start;">
+            📢 Broadcast Notice / Announcement to Residents
+          </a>
+          <a href="{{ url_for('owner.tenants') }}" class="btn btn-outline-primary" style="justify-content: flex-start;">
+            👥 Resident Directory & Sensitive ID Proof Verification
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;">System & Regional Defaults</h2>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0.5rem 0;">
+            <span style="color: var(--text-muted);">Currency</span>
+            <strong>INR ({{ currency_symbol }})</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0.5rem 0;">
+            <span style="color: var(--text-muted);">Timezone</span>
+            <strong>Asia/Kolkata (IST)</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0.5rem 0;">
+            <span style="color: var(--text-muted);">Rent Due Day</span>
+            <strong>5th of Month (3-Day Grace)</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+            <span style="color: var(--text-muted);">Notice Period</span>
+            <strong>30 Days</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

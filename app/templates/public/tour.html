@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Book a Room Tour / Schedule Visit{% endblock %}
+
+{% block content %}
+<section style="padding: 4rem 0;">
+  <div class="container" style="max-width: 650px;">
+    <div class="card">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="badge badge-primary" style="margin-bottom: 0.5rem;">Guided In-Person Tour</span>
+        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">Schedule Your Visit</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Experience our rooms, dining facility, and community spaces firsthand.</p>
+      </div>
+
+      <form method="POST" action="#">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name *</label>
+          <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Ramesh Kumar" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="phone">Mobile Phone (10 digits) *</label>
+            <input type="tel" id="phone" name="phone" class="form-control" placeholder="9876543210" pattern="[0-9]{10}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address *</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="ramesh@example.com" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="preferred_datetime">Preferred Date & Time *</label>
+            <input type="datetime-local" id="preferred_datetime" name="preferred_datetime" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="room_id">Preferred Room Type</label>
+            <select id="room_id" name="room_id" class="form-control">
+              <option value="">Any Available Room</option>
+              {% for room in rooms %}
+                <option value="{{ room.id }}">Room {{ room.room_number }} ({{ room.room_type }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="message">Specific Preferences or Questions</label>
+          <textarea id="message" name="message" class="form-control" rows="3" placeholder="Expected move-in date, meal preferences, etc."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;">
+          Confirm Tour Booking
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
