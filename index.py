@@ -7,6 +7,8 @@ if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
 try:
+    from flask import redirect
+
     from app import create_app
 
     is_serverless = bool(
@@ -19,6 +21,12 @@ try:
     env_name = os.getenv("FLASK_ENV", default_env)
 
     app = create_app(env_name)
+
+    # Defensive fallback in case any edge proxy or cached client requests /api/index
+    @app.route("/api/index")
+    def handle_legacy_api_index():
+        return redirect("/")
+
     handler = app
 
 except Exception:  # noqa: BLE001
