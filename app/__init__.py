@@ -70,6 +70,20 @@ def create_app(config_name=None):
     # ProxyFix for reverse proxies (Vercel, Render, Nginx)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
+    # Strip /api/index prefix if Vercel internal rewrite passed the destination path
+    class StripVercelPrefixMiddleware:
+        def __init__(self, wsgi_app):
+            self.wsgi_app = wsgi_app
+
+        def __call__(self, environ, start_response):
+            path_info = environ.get("PATH_INFO", "")
+            if path_info.startswith("/api/index"):
+                new_path = path_info[len("/api/index"):] or "/"
+                environ["PATH_INFO"] = new_path
+            return self.wsgi_app(environ, start_response)
+
+    app.wsgi_app = StripVercelPrefixMiddleware(app.wsgi_app)
+
     # Ensure required directories exist (failsafe on read-only serverless filesystems)
     try:
         os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
@@ -109,7 +123,7 @@ def create_app(config_name=None):
 
     talisman.init_app(
         app,
-        force_https=False if IS_VERCEL else app.config.get("SESSION_COOKIE_SECURE", False),
+        force_https=False,
         content_security_policy=csp,
         content_security_policy_nonce_in=["script-src"],
     )

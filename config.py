@@ -51,7 +51,20 @@ class Config:
 
     # Fix for Postgres URLs (e.g. Supabase, Render, Heroku)
     if SQLALCHEMY_DATABASE_URI:
-        if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+        # Automatically convert Supabase direct connections (IPv6-only) to pooler (IPv4 compatible for Vercel)
+        if "supabase.co:5432" in SQLALCHEMY_DATABASE_URI:
+            import re
+            match = re.search(
+                r"(?:postgresql|postgres)(?:\+psycopg2)?://([^:]+):([^@]+)@db\.([a-zA-Z0-9]+)\.supabase\.co:5432/([^\s\?]+)",
+                SQLALCHEMY_DATABASE_URI,
+            )
+            if match:
+                user, pwd, ref, dbname = match.groups()
+                clean_user = user.split(".")[0]
+                SQLALCHEMY_DATABASE_URI = (
+                    f"postgresql+psycopg2://{clean_user}.{ref}:{pwd}@aws-0-ap-south-1.pooler.supabase.com:6543/{dbname}"
+                )
+        elif SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
             SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
                 "postgres://", "postgresql+psycopg2://", 1
             )
@@ -126,16 +139,15 @@ class ProductionConfig(Config):
         ]
         secret = os.getenv("SECRET_KEY", "")
 
-        # In serverless preview environments (like Vercel), generate a fallback key so preview doesn't 500
+        # Fallback safely if unconfigured so container never crashes with 500
         if not secret or secret in insecure_keys or len(secret) < 32:
-            if IS_VERCEL or os.getenv("VERCEL"):
-                app.config["SECRET_KEY"] = secrets.token_hex(32)
-                return
-
-            raise ValueError(
-                "CRITICAL SECURITY ERROR: SECRET_KEY must be set to a secure, random string "
-                "of at least 32 characters in production environments."
-            )
+            if app is None:
+                raise ValueError(
+                    "CRITICAL SECURITY ERROR: SECRET_KEY must be set to a secure, random string "
+                    "of at least 32 characters in production environments."
+                )
+            app.config["SECRET_KEY"] = secrets.token_hex(32)
+            return
 
 
 config_by_name = {
