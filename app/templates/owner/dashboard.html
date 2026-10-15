@@ -1,96 +1,403 @@
-{% extends "base.html" %}
+{% extends "portal_base.html" %}
 
-{% block title %}Owner Administrative Dashboard{% endblock %}
+{% block title %}Dashboard{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
 
 {% block content %}
-<section style="padding: 2.5rem 0;">
-  <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-      <div>
-        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem;">Owner Dashboard</h1>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Real-time PG occupancy, operations, and resident financial metrics.</p>
+<!-- Page Header -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.65rem;">
+      <span>Overview & Operations</span>
+      <span class="status-pill success" style="font-size: 0.75rem;">Live Data</span>
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+      Real-time room occupancy, tenant bookings, financial health, and maintenance status.
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+    <a href="{{ url_for('owner.rooms') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+      <span>🛏️</span>
+      <span>Manage Rooms</span>
+    </a>
+    <a href="{{ url_for('owner.bookings') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+      <span>📋</span>
+      <span>Review Bookings</span>
+      {% if pending_bookings > 0 %}
+        <span class="portal-nav-badge" style="background-color: var(--color-warning-bg); color: var(--color-warning); font-size: 0.7rem; padding: 0.1rem 0.45rem;">{{ pending_bookings }}</span>
+      {% endif %}
+    </a>
+    <a href="{{ url_for('owner.rent') }}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+      <span>💰</span>
+      <span>Rent & Ledger</span>
+    </a>
+  </div>
+</div>
+
+<!-- 6 Primary Operational KPI Cards -->
+<div class="kpi-grid">
+  <!-- Card 1: Bed Occupancy -->
+  <div class="stat-card accent-primary">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Bed Occupancy</span>
+      <span class="stat-card-icon">🛏️</span>
+    </div>
+    <div class="stat-card-value">{{ occupied_beds }} <span style="font-size: 1.15rem; color: var(--text-muted); font-weight: 500;">/ {{ total_beds }}</span></div>
+    <div class="kpi-progress" title="{{ occupancy_pct }}% Occupied">
+      <div class="kpi-progress-bar" style="width: {{ occupancy_pct }}%;"></div>
+    </div>
+    <div class="stat-card-meta" style="margin-top: 0.5rem;">
+      <span><strong>{{ vacant_beds }}</strong> vacant beds</span>
+      <span>&bull;</span>
+      <span>{{ total_rooms }} rooms</span>
+    </div>
+  </div>
+
+  <!-- Card 2: Occupancy Rate -->
+  <div class="stat-card accent-info">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Occupancy Rate</span>
+      <span class="stat-card-icon">📊</span>
+    </div>
+    <div class="stat-card-value">{{ occupancy_pct }}%</div>
+    <div class="stat-card-meta">
+      {% if occupancy_pct >= 80 %}
+        <span class="status-pill success">High Demand</span>
+      {% elif occupancy_pct >= 50 %}
+        <span class="status-pill info">Healthy Occupancy</span>
+      {% else %}
+        <span class="status-pill warning">Capacity Available</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Card 3: Total Rent Collected -->
+  <div class="stat-card accent-success">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Rent Collected</span>
+      <span class="stat-card-icon">💰</span>
+    </div>
+    <div class="stat-card-value" style="color: var(--color-success);">
+      {{ currency_symbol }}{{ "{:,.2f}".format(rent_collected) }}
+    </div>
+    <div class="stat-card-meta">
+      <span class="status-pill success">Verified Inflow</span>
+      <span style="color: var(--text-muted);">Total settled</span>
+    </div>
+  </div>
+
+  <!-- Card 4: Outstanding Rent -->
+  <div class="stat-card {% if outstanding_rent > 0 %}accent-danger{% else %}accent-success{% endif %}">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Outstanding Rent</span>
+      <span class="stat-card-icon">⏳</span>
+    </div>
+    <div class="stat-card-value" style="color: {% if outstanding_rent > 0 %}var(--color-danger){% else %}var(--color-success){% endif %};">
+      {{ currency_symbol }}{{ "{:,.2f}".format(outstanding_rent) }}
+    </div>
+    <div class="stat-card-meta">
+      {% if outstanding_rent > 0 %}
+        <span class="status-pill danger">Action Required</span>
+        <a href="{{ url_for('owner.rent') }}" style="color: var(--color-danger); text-decoration: underline;">Collect dues &rarr;</a>
+      {% else %}
+        <span class="status-pill success">All Settled</span>
+        <span style="color: var(--text-muted);">Zero pending dues</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Card 5: Pending Bookings -->
+  <div class="stat-card {% if pending_bookings > 0 %}accent-warning{% else %}accent-primary{% endif %}">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Pending Bookings</span>
+      <span class="stat-card-icon">📋</span>
+    </div>
+    <div class="stat-card-value" style="color: {% if pending_bookings > 0 %}var(--color-warning){% else %}var(--text-main){% endif %};">
+      {{ pending_bookings }}
+    </div>
+    <div class="stat-card-meta">
+      {% if pending_bookings > 0 %}
+        <a href="{{ url_for('owner.bookings') }}" style="color: var(--color-warning); font-weight: 600; text-decoration: none;">
+          Review applications &rarr;
+        </a>
+      {% else %}
+        <span style="color: var(--text-muted);">No pending requests</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Card 6: Open Complaints -->
+  <div class="stat-card {% if open_complaints > 0 %}accent-danger{% else %}accent-success{% endif %}">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Open Complaints</span>
+      <span class="stat-card-icon">🛠️</span>
+    </div>
+    <div class="stat-card-value" style="color: {% if open_complaints > 0 %}var(--color-danger){% else %}var(--color-success){% endif %};">
+      {{ open_complaints }}
+    </div>
+    <div class="stat-card-meta">
+      {% if open_complaints > 0 %}
+        <a href="{{ url_for('owner.complaints') }}" style="color: var(--color-danger); font-weight: 600; text-decoration: none;">
+          Resolve tickets &rarr;
+        </a>
+      {% else %}
+        <span class="status-pill success">All Clear</span>
+        <span style="color: var(--text-muted);">No pending tickets</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Two-Column Portal Grid -->
+<div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 1.5rem; align-items: start;">
+  <!-- Left Column: Bookings & Rooms -->
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- Recent Booking Applications Card -->
+    <div class="portal-card">
+      <div class="portal-card-header">
+        <h2 class="portal-card-title">
+          <span>📋</span>
+          <span>Recent Booking Requests</span>
+        </h2>
+        <a href="{{ url_for('owner.bookings') }}" class="btn btn-outline-primary btn-sm">
+          View All Bookings &rarr;
+        </a>
       </div>
-      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="{{ url_for('owner.rooms') }}" class="btn btn-secondary btn-sm">Manage Rooms</a>
-        <a href="{{ url_for('owner.bookings') }}" class="btn btn-secondary btn-sm">Bookings</a>
-        <a href="{{ url_for('owner.rent') }}" class="btn btn-secondary btn-sm">Rent & Billing</a>
-        <a href="{{ url_for('owner.settings') }}" class="btn btn-secondary btn-sm">Settings</a>
-      </div>
+
+      {% if recent_bookings %}
+        <div class="table-responsive">
+          <table class="portal-table">
+            <thead>
+              <tr>
+                <th>Applicant</th>
+                <th>Room Requested</th>
+                <th>Move-In Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in recent_bookings %}
+                <tr>
+                  <td>
+                    <div style="font-weight: 600; color: var(--text-main);">{{ b.tenant.full_name }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ b.tenant.phone }}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 500;">Room {{ b.room.room_number }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ b.room.room_type }}</div>
+                  </td>
+                  <td>
+                    <span style="font-size: 0.85rem;">{{ b.requested_move_in_date.strftime('%d %b %Y') if b.requested_move_in_date else 'Immediate' }}</span>
+                  </td>
+                  <td>
+                    {% if b.status == 'PENDING' %}
+                      <span class="status-pill warning">Pending</span>
+                    {% elif b.status == 'APPROVED' %}
+                      <span class="status-pill success">Approved</span>
+                    {% elif b.status == 'REJECTED' %}
+                      <span class="status-pill danger">Rejected</span>
+                    {% else %}
+                      <span class="status-pill neutral">{{ b.status }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('owner.bookings') }}" class="btn btn-outline-primary btn-sm" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;">
+                      Review
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📋</div>
+          <p style="margin: 0; font-size: 0.95rem; font-weight: 500;">No booking requests received yet.</p>
+          <p style="font-size: 0.825rem; margin-top: 0.25rem;">Visitors can explore rooms and submit booking applications online.</p>
+        </div>
+      {% endif %}
     </div>
 
-    <!-- Quick Stats Cards Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
-      <div class="card">
-        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Total Bed Capacity</span>
-        <div style="font-size: 2rem; font-weight: 700; color: var(--color-primary); margin: 0.5rem 0;">{{ total_beds }}</div>
-        <span style="font-size: 0.8rem; color: var(--text-muted);">Across {{ total_rooms }} active rooms</span>
+    <!-- Room Inventory & Occupancy Snapshot Card -->
+    <div class="portal-card">
+      <div class="portal-card-header">
+        <h2 class="portal-card-title">
+          <span>🛏️</span>
+          <span>Room Inventory & Bed Availability</span>
+        </h2>
+        <a href="{{ url_for('owner.rooms') }}" class="btn btn-outline-primary btn-sm">
+          Manage All Rooms &rarr;
+        </a>
       </div>
 
-      <div class="card">
-        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Occupancy Rate</span>
-        <div style="font-size: 2rem; font-weight: 700; color: var(--color-success); margin: 0.5rem 0;">{{ occupancy_pct }}%</div>
-        <span style="font-size: 0.8rem; color: var(--text-muted);">{{ occupied_beds }} beds occupied, {{ available_beds }} free</span>
-      </div>
-
-      <div class="card">
-        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Pending Bookings</span>
-        <div style="font-size: 2rem; font-weight: 700; color: {{ 'var(--color-warning)' if pending_bookings > 0 else 'var(--color-primary)' }}; margin: 0.5rem 0;">
-          {{ pending_bookings }}
-        </div>
-        <a href="{{ url_for('owner.bookings') }}" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none;">Review requests &rarr;</a>
-      </div>
-
-      <div class="card">
-        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Open Complaints</span>
-        <div style="font-size: 2rem; font-weight: 700; color: {{ 'var(--color-danger)' if open_complaints > 0 else 'var(--color-primary)' }}; margin: 0.5rem 0;">
-          {{ open_complaints }}
-        </div>
-        <a href="{{ url_for('owner.complaints') }}" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none;">View complaints &rarr;</a>
-      </div>
-    </div>
-
-    <!-- Quick Operations Panels -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
-      <div class="card">
-        <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;">Administrative Actions</h2>
+      {% if rooms_summary %}
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <a href="{{ url_for('owner.bookings') }}" class="btn btn-outline-primary" style="justify-content: flex-start;">
-            📋 Review Booking Requests ({{ pending_bookings }})
-          </a>
-          <a href="{{ url_for('owner.rent') }}" class="btn btn-outline-primary" style="justify-content: flex-start;">
-            💰 Monthly Rent Charges & Offline Payment Entry
-          </a>
-          <a href="{{ url_for('owner.notices') }}" class="btn btn-outline-primary" style="justify-content: flex-start;">
-            📢 Broadcast Notice / Announcement to Residents
-          </a>
-          <a href="{{ url_for('owner.tenants') }}" class="btn btn-outline-primary" style="justify-content: flex-start;">
-            👥 Resident Directory & Sensitive ID Proof Verification
-          </a>
+          {% for r in rooms_summary %}
+            {% set occ = r.total_beds - r.available_beds %}
+            <div class="room-bar-item">
+              <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div style="background-color: var(--color-primary-light); color: var(--color-primary); font-weight: 700; padding: 0.4rem 0.65rem; border-radius: var(--radius-md); font-size: 0.85rem;">
+                  Room {{ r.room_number }}
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);">
+                    {{ r.room_type }}
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 400; margin-left: 0.35rem;">(Floor {{ r.floor }})</span>
+                  </div>
+                  <div style="font-size: 0.785rem; color: var(--text-muted); margin-top: 0.15rem;">
+                    Rent: <strong>{{ currency_symbol }}{{ "{:,.0f}".format(r.monthly_rent) }}</strong> / bed &bull; Deposit: {{ currency_symbol }}{{ "{:,.0f}".format(r.security_deposit) }}
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 0.85rem; text-align: right;">
+                <div>
+                  <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">
+                    {{ occ }} / {{ r.total_beds }} Beds
+                  </div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    {% if r.available_beds == 0 %}
+                      <span class="status-pill danger" style="padding: 0.1rem 0.45rem; font-size: 0.7rem;">Fully Occupied</span>
+                    {% elif r.available_beds == r.total_beds %}
+                      <span class="status-pill info" style="padding: 0.1rem 0.45rem; font-size: 0.7rem;">All {{ r.available_beds }} Vacant</span>
+                    {% else %}
+                      <span class="status-pill success" style="padding: 0.1rem 0.45rem; font-size: 0.7rem;">{{ r.available_beds }} Vacant</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
         </div>
+      {% else %}
+        <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚪</div>
+          <p style="margin: 0;">No active rooms found.</p>
+          <a href="{{ url_for('owner.rooms') }}" class="btn btn-primary btn-sm" style="margin-top: 0.75rem;">Create First Room</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Column: Financials, Complaints & Tools -->
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- Financial Overview Card -->
+    <div class="portal-card">
+      <div class="portal-card-header">
+        <h2 class="portal-card-title">
+          <span>💰</span>
+          <span>Financial Snapshot</span>
+        </h2>
+        <a href="{{ url_for('owner.rent') }}" class="btn btn-outline-primary btn-sm">
+          Rent Ledger &rarr;
+        </a>
       </div>
 
-      <div class="card">
-        <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;">System & Regional Defaults</h2>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;">
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0.5rem 0;">
-            <span style="color: var(--text-muted);">Currency</span>
-            <strong>INR ({{ currency_symbol }})</strong>
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background-color: var(--bg-subtle); border-radius: var(--radius-md); border-left: 3px solid var(--color-success);">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Verified Inflow</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: var(--color-success); margin-top: 0.15rem;">
+              {{ currency_symbol }}{{ "{:,.2f}".format(rent_collected) }}
+            </div>
           </div>
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0.5rem 0;">
-            <span style="color: var(--text-muted);">Timezone</span>
-            <strong>Asia/Kolkata (IST)</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0.5rem 0;">
-            <span style="color: var(--text-muted);">Rent Due Day</span>
-            <strong>5th of Month (3-Day Grace)</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-            <span style="color: var(--text-muted);">Notice Period</span>
-            <strong>30 Days</strong>
-          </div>
+          <span class="status-pill success" style="font-size: 0.75rem;">Paid</span>
         </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background-color: var(--bg-subtle); border-radius: var(--radius-md); border-left: 3px solid {% if outstanding_rent > 0 %}var(--color-danger){% else %}var(--color-success){% endif %};">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Pending Dues</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: {% if outstanding_rent > 0 %}var(--color-danger){% else %}var(--color-success){% endif %}; margin-top: 0.15rem;">
+              {{ currency_symbol }}{{ "{:,.2f}".format(outstanding_rent) }}
+            </div>
+          </div>
+          <span class="status-pill {% if outstanding_rent > 0 %}danger{% else %}success{% endif %}" style="font-size: 0.75rem;">
+            {% if outstanding_rent > 0 %}Due{% else %}Clear{% endif %}
+          </span>
+        </div>
+
+        <div style="margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); font-size: 0.825rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <span>Monthly Due Date:</span>
+          <strong>5th of each month</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Maintenance Complaints Card -->
+    <div class="portal-card">
+      <div class="portal-card-header">
+        <h2 class="portal-card-title">
+          <span>🛠️</span>
+          <span>Recent Complaints</span>
+        </h2>
+        <a href="{{ url_for('owner.complaints') }}" class="btn btn-outline-primary btn-sm">
+          All ({{ open_complaints }}) &rarr;
+        </a>
+      </div>
+
+      {% if recent_complaints %}
+        <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+          {% for c in recent_complaints %}
+            <div style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-surface);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.35rem;">
+                <div style="font-weight: 600; font-size: 0.875rem; color: var(--text-main);">{{ c.title }}</div>
+                {% if c.priority == 'Urgent' or c.priority == 'High' %}
+                  <span class="status-pill danger" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">{{ c.priority }}</span>
+                {% else %}
+                  <span class="status-pill info" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">{{ c.priority }}</span>
+                {% endif %}
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted);">
+                <span>By: {{ c.tenant.full_name }}</span>
+                <span class="status-pill {% if c.status == 'OPEN' %}danger{% elif c.status == 'IN_PROGRESS' %}warning{% else %}success{% endif %}" style="font-size: 0.7rem;">
+                  {{ c.status }}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 1.5rem 1rem; color: var(--text-muted);">
+          <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">✨</div>
+          <p style="margin: 0; font-size: 0.875rem;">No open complaints. Everything is running smoothly!</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Quick Operations & Direct Links -->
+    <div class="portal-card">
+      <div class="portal-card-header">
+        <h2 class="portal-card-title">
+          <span>⚙️</span>
+          <span>Quick Admin Tools</span>
+        </h2>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.55rem;">
+        <a href="{{ url_for('owner.rooms') }}" class="portal-nav-link" style="padding: 0.55rem 0.75rem; background-color: var(--bg-subtle);">
+          <span class="nav-icon">🛏️</span>
+          <span style="font-size: 0.85rem;">Add & Configure Rooms</span>
+        </a>
+        <a href="{{ url_for('owner.rent') }}" class="portal-nav-link" style="padding: 0.55rem 0.75rem; background-color: var(--bg-subtle);">
+          <span class="nav-icon">💰</span>
+          <span style="font-size: 0.85rem;">Record Offline Cash / UPI Payment</span>
+        </a>
+        <a href="{{ url_for('owner.tenants') }}" class="portal-nav-link" style="padding: 0.55rem 0.75rem; background-color: var(--bg-subtle);">
+          <span class="nav-icon">👥</span>
+          <span style="font-size: 0.85rem;">Resident Directory & ID Proofs</span>
+        </a>
+        <a href="{{ url_for('owner.notices') }}" class="portal-nav-link" style="padding: 0.55rem 0.75rem; background-color: var(--bg-subtle);">
+          <span class="nav-icon">📢</span>
+          <span style="font-size: 0.85rem;">Broadcast Notice to Residents</span>
+        </a>
+        <a href="{{ url_for('owner.settings') }}" class="portal-nav-link" style="padding: 0.55rem 0.75rem; background-color: var(--bg-subtle);">
+          <span class="nav-icon">⚙️</span>
+          <span style="font-size: 0.85rem;">PG Property Rules & Timing</span>
+        </a>
       </div>
     </div>
   </div>
-</section>
+</div>
 {% endblock %}

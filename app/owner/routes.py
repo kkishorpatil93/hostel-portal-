@@ -1,10 +1,12 @@
-"""Owner admin portal views."""
+from decimal import Decimal
 
 from flask import render_template
+from sqlalchemy import func
 
 from app.auth.decorators import owner_required
+from app.extensions import db
 from app.models.booking import Allocation, AllocationStatus, Booking, BookingStatus
-from app.models.financial import RentCharge
+from app.models.financial import Payment, PaymentStatus, RentCharge
 from app.models.operations import Complaint, ComplaintStatus, Notice, TourRequest
 from app.models.property import Bed, Property, Room
 from app.models.user import User, UserRole
@@ -16,24 +18,48 @@ from app.owner import owner_bp
 def dashboard():
     total_rooms = Room.query.filter_by(is_active=True).count()
     total_beds = Bed.query.filter_by(is_active=True).count()
-    active_allocations = Allocation.query.filter_by(status=AllocationStatus.ACTIVE).count()
-    available_beds = max(0, total_beds - active_allocations)
-    occupancy_pct = round((active_allocations / total_beds * 100), 1) if total_beds > 0 else 0
+    occupied_beds = Allocation.query.filter_by(status=AllocationStatus.ACTIVE).count()
+    vacant_beds = max(0, total_beds - occupied_beds)
+    occupancy_pct = round((occupied_beds / total_beds * 100), 1) if total_beds > 0 else 0.0
 
     pending_bookings = Booking.query.filter_by(status=BookingStatus.PENDING).count()
     pending_tours = TourRequest.query.filter_by(status="PENDING").count()
-    open_complaints = Complaint.query.filter(Complaint.status.in_([ComplaintStatus.OPEN, ComplaintStatus.IN_PROGRESS])).count()
+    open_complaints = Complaint.query.filter(
+        Complaint.status.in_([ComplaintStatus.OPEN, ComplaintStatus.IN_PROGRESS])
+    ).count()
+
+    # Calculate real financial metrics from live payments and rent charges
+    rent_collected = (
+        db.session.query(func.coalesce(func.sum(Payment.amount), Decimal("0.00")))
+        .filter(Payment.status == PaymentStatus.SUCCESS)
+        .scalar()
+    ) or Decimal("0.00")
+
+    all_charges = RentCharge.query.all()
+    outstanding_rent = sum((c.outstanding_balance for c in all_charges), Decimal("0.00"))
+
+    # Recent activity items
+    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
+    recent_complaints = Complaint.query.order_by(Complaint.created_at.desc()).limit(5).all()
+    rooms_summary = Room.query.filter_by(is_active=True).order_by(Room.room_number).all()
 
     return render_template(
         "owner/dashboard.html",
         total_rooms=total_rooms,
         total_beds=total_beds,
-        occupied_beds=active_allocations,
-        available_beds=available_beds,
+        occupied_beds=occupied_beds,
+        available_beds=vacant_beds,
+        vacant_beds=vacant_beds,
         occupancy_pct=occupancy_pct,
         pending_bookings=pending_bookings,
         pending_tours=pending_tours,
         open_complaints=open_complaints,
+        rent_collected=rent_collected,
+        outstanding_rent=outstanding_rent,
+        recent_bookings=recent_bookings,
+        recent_complaints=recent_complaints,
+        rooms_summary=rooms_summary,
+        currency_symbol="₹",
     )
 
 

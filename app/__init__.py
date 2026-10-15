@@ -9,7 +9,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.extensions import csrf, db, limiter, login_manager, migrate, talisman
 from app.models.user import User
-from config import IS_VERCEL, config_by_name
+from config import config_by_name
 
 
 def format_inr(value):

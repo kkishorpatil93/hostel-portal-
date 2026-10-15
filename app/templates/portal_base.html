@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Owner Portal{% endblock %} — StayNest PG</title>
+  <meta name="description" content="StayNest PG Management Portal">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="portal-wrapper">
+    <!-- Backdrop for mobile drawer -->
+    <div class="portal-backdrop" id="portal-backdrop"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="portal-sidebar" id="portal-sidebar">
+      <div class="portal-sidebar-header">
+        <a href="{{ url_for('public.index') }}" class="portal-brand">
+          <span>🏠</span>
+          <span>StayNest</span>
+        </a>
+        <span class="portal-brand-badge">Owner</span>
+      </div>
+
+      <nav class="portal-sidebar-nav" aria-label="Portal Navigation">
+        <div class="portal-nav-section-title">Operations</div>
+        <a href="{{ url_for('owner.dashboard') }}" class="portal-nav-link {% if request.endpoint == 'owner.dashboard' %}active{% endif %}">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('owner.rooms') }}" class="portal-nav-link {% if request.endpoint == 'owner.rooms' %}active{% endif %}">
+          <span class="nav-icon">🛏️</span>
+          <span>Rooms & Beds</span>
+        </a>
+        <a href="{{ url_for('owner.bookings') }}" class="portal-nav-link {% if request.endpoint == 'owner.bookings' %}active{% endif %}">
+          <span class="nav-icon">📋</span>
+          <span>Bookings</span>
+          {% if pending_bookings and pending_bookings > 0 %}
+            <span class="portal-nav-badge" style="background-color: var(--color-warning-bg); color: var(--color-warning);">{{ pending_bookings }}</span>
+          {% endif %}
+        </a>
+        <a href="{{ url_for('owner.tenants') }}" class="portal-nav-link {% if request.endpoint == 'owner.tenants' %}active{% endif %}">
+          <span class="nav-icon">👥</span>
+          <span>Residents</span>
+        </a>
+
+        <div class="portal-nav-section-title">Finance & Service</div>
+        <a href="{{ url_for('owner.rent') }}" class="portal-nav-link {% if request.endpoint == 'owner.rent' %}active{% endif %}">
+          <span class="nav-icon">💰</span>
+          <span>Rent & Accounts</span>
+        </a>
+        <a href="{{ url_for('owner.complaints') }}" class="portal-nav-link {% if request.endpoint == 'owner.complaints' %}active{% endif %}">
+          <span class="nav-icon">🛠️</span>
+          <span>Complaints</span>
+          {% if open_complaints and open_complaints > 0 %}
+            <span class="portal-nav-badge" style="background-color: var(--color-danger-bg); color: var(--color-danger);">{{ open_complaints }}</span>
+          {% endif %}
+        </a>
+        <a href="{{ url_for('owner.notices') }}" class="portal-nav-link {% if request.endpoint == 'owner.notices' %}active{% endif %}">
+          <span class="nav-icon">📢</span>
+          <span>Announcements</span>
+        </a>
+
+        <div class="portal-nav-section-title">System</div>
+        <a href="{{ url_for('owner.settings') }}" class="portal-nav-link {% if request.endpoint == 'owner.settings' %}active{% endif %}">
+          <span class="nav-icon">⚙️</span>
+          <span>PG Settings</span>
+        </a>
+      </nav>
+
+      <div class="portal-sidebar-footer">
+        <div class="portal-user-card">
+          <div class="portal-user-avatar">
+            {{ current_user.full_name[:2].upper() if current_user.full_name else 'OW' }}
+          </div>
+          <div class="portal-user-info">
+            <div class="portal-user-name" title="{{ current_user.full_name }}">{{ current_user.full_name }}</div>
+            <div class="portal-user-role">PG Administrator</div>
+          </div>
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-icon btn-sm" title="Sign Out" aria-label="Sign Out">
+            <span>🚪</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Portal Content -->
+    <div class="portal-main">
+      <!-- Topbar -->
+      <header class="portal-topbar">
+        <div class="portal-topbar-left">
+          <button class="portal-mobile-toggle" id="portal-menu-btn" aria-label="Toggle Navigation Drawer">
+            ☰
+          </button>
+          <div class="portal-breadcrumbs">
+            <a href="{{ url_for('owner.dashboard') }}">Owner Portal</a>
+            <span>/</span>
+            <strong>{% block breadcrumb %}Dashboard{% endblock %}</strong>
+          </div>
+        </div>
+
+        <div class="portal-topbar-right">
+          <a href="{{ url_for('public.index') }}" target="_blank" class="btn btn-outline-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+            <span>Public Site</span>
+            <span style="font-size: 0.75rem;">↗</span>
+          </a>
+
+          <button id="theme-toggle" class="btn btn-icon btn-sm" title="Toggle Light/Dark Theme" aria-label="Toggle theme">
+            <span class="theme-icon">🌙</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Body -->
+      <main class="portal-content-body" id="main-content">
+        <!-- Flash Messages -->
+        <div class="flash-messages" style="margin-bottom: 1.5rem;">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">
+                  <span>{{ message }}</span>
+                  <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Close message">&times;</button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>
+    // Responsive Portal Drawer Toggle Script
+    (function() {
+      const toggleBtn = document.getElementById('portal-menu-btn');
+      const sidebar = document.getElementById('portal-sidebar');
+      const backdrop = document.getElementById('portal-backdrop');
+
+      function toggleSidebar() {
+        sidebar.classList.toggle('open');
+        backdrop.classList.toggle('open');
+      }
+
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleSidebar);
+      }
+      if (backdrop) {
+        backdrop.addEventListener('click', toggleSidebar);
+      }
+    })();
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

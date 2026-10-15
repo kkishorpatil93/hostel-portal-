@@ -1,6 +1,7 @@
 import os
 import secrets
 from datetime import timedelta
+from typing import Any, ClassVar
 
 from dotenv import load_dotenv
 
@@ -73,7 +74,7 @@ class Config:
                 "postgresql://", "postgresql+psycopg2://", 1
             )
 
-    SQLALCHEMY_ENGINE_OPTIONS = {
+    SQLALCHEMY_ENGINE_OPTIONS: ClassVar[dict[str, Any]] = {
         "pool_pre_ping": True,
         "pool_recycle": 280,
     }
