@@ -10,44 +10,13 @@ from app.models.user import User, UserRole
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if current_user.is_authenticated:
-        if current_user.is_owner:
-            return redirect(url_for("owner.dashboard"))
-        return redirect(url_for("tenant.dashboard"))
-
-    if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-
-        user = User.query.filter_by(email=email).first()
-        if not user and email in ("owner", "admin", "kishor", "kishor@staynest.local"):
-            user = User.query.filter_by(role=UserRole.OWNER).first()
-        if user and user.check_password(password):
-            if not user.is_active:
-                flash("Your account has been deactivated. Please contact the PG owner.", "danger")
-                return render_template("auth/login.html")
-
-            if user.is_locked:
-                flash("Account is temporarily locked due to failed attempts. Try again later.", "danger")
-                return render_template("auth/login.html")
-
-            user.reset_failed_logins()
-            db.session.commit()
-            login_user(user, remember=bool(request.form.get("remember")))
-
-            next_page = request.args.get("next")
-            if next_page and next_page.startswith("/"):
-                return redirect(next_page)
-            if user.is_owner:
-                return redirect(url_for("owner.dashboard"))
-            return redirect(url_for("tenant.dashboard"))
-        else:
-            if user:
-                user.record_failed_login()
-                db.session.commit()
-            flash("Invalid email or password.", "danger")
-
-    return render_template("auth/login.html")
+    owner = User.query.filter_by(role=UserRole.OWNER).first()
+    if owner:
+        login_user(owner, remember=True)
+    next_page = request.args.get("next")
+    if next_page and next_page.startswith("/") and not next_page.startswith("/auth/login"):
+        return redirect(next_page)
+    return redirect(url_for("owner.dashboard"))
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])

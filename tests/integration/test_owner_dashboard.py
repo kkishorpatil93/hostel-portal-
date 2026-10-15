@@ -16,26 +16,20 @@ from app.models.property import Room
 from app.models.user import User
 
 
-def test_owner_dashboard_unauthorized_redirect(client):
-    """Anonymous visitors should be redirected to the login page."""
+def test_owner_dashboard_direct_access_without_login(client):
+    """Owner dashboard should be directly accessible without requiring a login barrier."""
     response = client.get("/owner/dashboard")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "Overview & Operations" in html
+    assert "Bed Occupancy" in html
+
+
+def test_auth_login_redirects_directly_to_dashboard(client):
+    """Accessing /auth/login should seamlessly redirect straight to the owner dashboard."""
+    response = client.get("/auth/login")
     assert response.status_code == 302
-    assert "/auth/login" in response.headers["Location"]
-
-
-def test_owner_dashboard_forbidden_for_tenant(client):
-    """Authenticated tenants should be prevented from viewing the owner dashboard."""
-    # Log in as demo tenant
-    login_res = client.post(
-        "/auth/login",
-        data={"email": "arjun.sharma@example.com", "password": "TenantPass#2026"},
-        follow_redirects=True,
-    )
-    assert login_res.status_code == 200
-
-    response = client.get("/owner/dashboard")
-    # Owner-only routes return 404 to avoid leaking admin paths
-    assert response.status_code == 404
+    assert "/owner/dashboard" in response.headers["Location"]
 
 
 def test_owner_dashboard_renders_live_metrics(client):

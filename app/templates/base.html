@@ -36,17 +36,7 @@
           <span class="theme-icon">🌙</span>
         </button>
 
-        {% if current_user.is_authenticated %}
-          {% if current_user.is_owner %}
-            <a href="{{ url_for('owner.dashboard') }}" class="btn btn-primary btn-sm">Owner Portal</a>
-          {% else %}
-            <a href="{{ url_for('tenant.dashboard') }}" class="btn btn-primary btn-sm">My Dashboard</a>
-          {% endif %}
-          <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Sign Out</a>
-        {% else %}
-          <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Sign In</a>
-          <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
-        {% endif %}
+        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-primary btn-sm">Owner Portal</a>
 
         <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open navigation menu">
           <span></span><span></span><span></span>
