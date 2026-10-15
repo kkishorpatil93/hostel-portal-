@@ -1,68 +1,281 @@
-{% extends "base.html" %}
+{% extends "portal_base.html" %}
 
-{% block title %}Tenant Grievances & Maintenance — Owner Portal{% endblock %}
+{% block title %}Maintenance & Grievances{% endblock %}
+{% block breadcrumb %}Maintenance Complaints{% endblock %}
 
 {% block content %}
-<section style="padding: 2.5rem 0;">
-  <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-      <div>
-        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">Maintenance & Grievances</h1>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Track, triage, and resolve tenant maintenance requests and complaints.</p>
-      </div>
-      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
-    </div>
-
-    <div class="card table-responsive" style="padding: 0;">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Ticket #</th>
-            <th>Tenant</th>
-            <th>Title</th>
-            <th>Category</th>
-            <th>Priority</th>
-            <th>Created</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for c in complaints %}
-          <tr>
-            <td>#{{ c.id }}</td>
-            <td>{{ c.tenant.full_name }}</td>
-            <td><strong>{{ c.title }}</strong></td>
-            <td><span class="badge badge-neutral">{{ c.category }}</span></td>
-            <td>
-              {% if c.priority == 'Urgent' or c.priority == 'High' %}
-                <span class="badge badge-danger">{{ c.priority }}</span>
-              {% else %}
-                <span class="badge badge-neutral">{{ c.priority }}</span>
-              {% endif %}
-            </td>
-            <td>{{ c.created_at|date_fmt }}</td>
-            <td>
-              {% if c.status == 'OPEN' %}
-                <span class="badge badge-danger">Open</span>
-              {% elif c.status == 'IN_PROGRESS' %}
-                <span class="badge badge-warning">In Progress</span>
-              {% elif c.status == 'RESOLVED' %}
-                <span class="badge badge-success">Resolved</span>
-              {% else %}
-                <span class="badge badge-neutral">{{ c.status }}</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-              No open complaints logged.
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+<!-- Page Header -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.65rem;">
+      <span>Maintenance & Grievances</span>
+      <span class="status-pill {% if open_complaints > 0 %}danger{% else %}success{% endif %}" style="font-size: 0.75rem;">
+        {% if open_complaints > 0 %}{{ open_complaints }} Open Issues{% else %}All Resolved{% endif %}
+      </span>
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+      Track, triage, and update tenant repair tickets, facility complaints, and maintenance resolutions.
+    </p>
   </div>
-</section>
+  <div style="display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center;">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+      <span>&larr;</span>
+      <span>Back to Dashboard</span>
+    </a>
+  </div>
+</div>
+
+<!-- KPI Summary Counters -->
+<div class="kpi-grid" style="margin-bottom: 1.75rem;">
+  <div class="stat-card accent-primary" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Total Complaints</span>
+      <span class="stat-card-icon">🛠️</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem;">{{ total_complaints }}</div>
+    <div class="stat-card-meta"><span>Logged across all rooms</span></div>
+  </div>
+
+  <div class="stat-card accent-danger" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Open Tickets</span>
+      <span class="stat-card-icon">⚠️</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-danger);">{{ open_complaints }}</div>
+    <div class="stat-card-meta"><span>Awaiting technician or action</span></div>
+  </div>
+
+  <div class="stat-card accent-warning" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">In Progress</span>
+      <span class="stat-card-icon">⏳</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-warning);">{{ in_progress_complaints }}</div>
+    <div class="stat-card-meta"><span>Currently being addressed</span></div>
+  </div>
+
+  <div class="stat-card accent-success" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Resolved & Closed</span>
+      <span class="stat-card-icon">✅</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-success);">{{ resolved_complaints }}</div>
+    <div class="stat-card-meta"><span>Successfully fixed</span></div>
+  </div>
+</div>
+
+<!-- Search, Filter & Sort Toolbar -->
+<div class="filter-toolbar">
+  <div class="search-input-wrapper">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="complaint-search-input" placeholder="Search by ticket #, tenant, room, category, or keywords..." aria-label="Search complaints">
+  </div>
+
+  <div class="filter-pills-group" role="tablist" aria-label="Filter complaints by status">
+    <button type="button" class="filter-pill-btn active" data-filter="all">All ({{ complaints|length }})</button>
+    <button type="button" class="filter-pill-btn" data-filter="open">Open ({{ open_complaints }})</button>
+    <button type="button" class="filter-pill-btn" data-filter="in_progress">In Progress ({{ in_progress_complaints }})</button>
+    <button type="button" class="filter-pill-btn" data-filter="resolved">Resolved ({{ resolved_complaints }})</button>
+  </div>
+</div>
+
+<!-- Complaints List / Table -->
+<div class="portal-card" style="padding: 0; overflow: hidden;">
+  <div class="table-responsive">
+    <table class="portal-table" id="complaints-table">
+      <thead>
+        <tr>
+          <th style="width: 100px;">Ticket ID</th>
+          <th style="width: 180px;">Tenant & Contact</th>
+          <th style="width: 120px;">Room</th>
+          <th>Issue Description</th>
+          <th style="width: 110px;">Priority</th>
+          <th style="width: 120px;">Submitted</th>
+          <th style="width: 120px;">Status</th>
+          <th style="width: 200px; text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="complaints-tbody">
+        {% if complaints %}
+          {% for c in complaints %}
+            <tr class="complaint-row"
+                data-id="{{ c.id }}"
+                data-status="{{ c.status|lower }}"
+                data-priority="{{ c.priority|lower }}"
+                data-search="#cmp-{{ c.id }} #{{ c.id }} {{ c.tenant.full_name|lower }} {{ c.tenant.phone }} {{ c.tenant.email|lower }} {% if c.room %}room {{ c.room.room_number|lower }}{% else %}common{% endif %} {{ c.title|lower }} {{ c.category|lower }} {{ c.description|lower }}">
+              
+              <!-- Ticket ID -->
+              <td>
+                <span style="font-weight: 700; color: var(--color-primary); font-family: monospace;">#CMP-{{ c.id }}</span>
+              </td>
+
+              <!-- Tenant Info -->
+              <td>
+                <div style="font-weight: 600; color: var(--text-main);">{{ c.tenant.full_name }}</div>
+                <div style="font-size: 0.775rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.2rem;">
+                  <span>📞 {{ c.tenant.phone or 'No phone' }}</span>
+                  <span style="text-overflow: ellipsis; overflow: hidden; max-width: 160px;">✉️ {{ c.tenant.email }}</span>
+                </div>
+              </td>
+
+              <!-- Room Number -->
+              <td>
+                {% if c.room %}
+                  <span class="status-pill info" style="font-weight: 600;">Room {{ c.room.room_number }}</span>
+                {% else %}
+                  <span class="status-pill neutral" style="font-size: 0.75rem;">Common Area</span>
+                {% endif %}
+              </td>
+
+              <!-- Complaint Details -->
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                  <strong style="color: var(--text-main); font-size: 0.95rem;">{{ c.title }}</strong>
+                  <span class="status-pill neutral" style="font-size: 0.7rem;">{{ c.category }}</span>
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; max-width: 480px;">
+                  {{ c.description }}
+                </div>
+                {% if c.owner_response %}
+                  <div style="margin-top: 0.4rem; padding: 0.4rem 0.65rem; background: var(--bg-subtle); border-left: 3px solid var(--color-primary); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-main);">
+                    <strong>Owner Note:</strong> {{ c.owner_response }}
+                  </div>
+                {% endif %}
+              </td>
+
+              <!-- Priority -->
+              <td>
+                {% if c.priority == 'Urgent' %}
+                  <span class="status-pill danger" style="font-weight: 700;">🚨 Urgent</span>
+                {% elif c.priority == 'High' %}
+                  <span class="status-pill danger" style="font-weight: 600;">🔥 High</span>
+                {% elif c.priority == 'Medium' %}
+                  <span class="status-pill warning" style="font-weight: 600;">⚡ Medium</span>
+                {% else %}
+                  <span class="status-pill info">🌱 Low</span>
+                {% endif %}
+              </td>
+
+              <!-- Date Submitted -->
+              <td style="color: var(--text-muted); font-size: 0.85rem;">
+                {{ c.created_at|date_fmt }}
+              </td>
+
+              <!-- Current Status -->
+              <td>
+                {% if c.status == 'OPEN' %}
+                  <span class="status-pill danger">Open</span>
+                {% elif c.status == 'IN_PROGRESS' %}
+                  <span class="status-pill warning">In Progress</span>
+                {% elif c.status == 'RESOLVED' %}
+                  <span class="status-pill success">Resolved</span>
+                {% elif c.status == 'CLOSED' %}
+                  <span class="status-pill neutral">Closed</span>
+                {% else %}
+                  <span class="status-pill neutral">{{ c.status }}</span>
+                {% endif %}
+              </td>
+
+              <!-- Action: Inline Status Update Form -->
+              <td style="text-align: right;">
+                <form action="{{ url_for('owner.update_complaint_status', complaint_id=c.id) }}" method="POST" style="display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-end;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  
+                  <div style="display: flex; gap: 0.35rem; align-items: center;">
+                    <select name="status" class="form-control" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; height: auto; width: 120px;" aria-label="Update status">
+                      <option value="OPEN" {% if c.status == 'OPEN' %}selected{% endif %}>Open</option>
+                      <option value="IN_PROGRESS" {% if c.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                      <option value="RESOLVED" {% if c.status == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                      <option value="CLOSED" {% if c.status == 'CLOSED' %}selected{% endif %}>Closed</option>
+                    </select>
+
+                    <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.3rem 0.65rem; font-size: 0.775rem;">
+                      Save
+                    </button>
+                  </div>
+
+                  <input type="text" name="owner_response" placeholder="Add resolution note..." value="{{ c.owner_response or '' }}" class="form-control" style="font-size: 0.75rem; padding: 0.2rem 0.45rem; width: 180px; height: auto;">
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr id="empty-table-row">
+            <td colspan="8" style="text-align: center; padding: 3.5rem 1.5rem;">
+              <div style="font-size: 2.75rem; margin-bottom: 0.75rem;">🎉</div>
+              <div style="font-weight: 600; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.35rem;">Zero Complaints Registered</div>
+              <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 420px; margin: 0 auto;">
+                No maintenance tickets or resident grievances found. Everything in your PG is running smoothly!
+              </p>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Dynamic Search / Filter Empty Message -->
+<div id="filter-no-results" style="display: none; text-align: center; padding: 3rem 1.5rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); margin-top: 1rem;">
+  <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+  <div style="font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">No matching complaints found</div>
+  <p style="color: var(--text-muted); font-size: 0.875rem;">Try modifying your search keywords or filter tab.</p>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('complaint-search-input');
+  const filterButtons = document.querySelectorAll('.filter-pill-btn');
+  const rows = document.querySelectorAll('.complaint-row');
+  const noResultsBox = document.getElementById('filter-no-results');
+
+  let currentFilter = 'all';
+  let searchQuery = '';
+
+  function applyFilters() {
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const rowStatus = row.getAttribute('data-status');
+      const searchText = row.getAttribute('data-search') || '';
+
+      const matchesStatus = (currentFilter === 'all') || 
+                            (currentFilter === 'open' && rowStatus === 'open') ||
+                            (currentFilter === 'in_progress' && rowStatus === 'in_progress') ||
+                            (currentFilter === 'resolved' && (rowStatus === 'resolved' || rowStatus === 'closed'));
+
+      const matchesSearch = !searchQuery || searchText.includes(searchQuery);
+
+      if (matchesStatus && matchesSearch) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (rows.length > 0) {
+      noResultsBox.style.display = (visibleCount === 0) ? 'block' : 'none';
+    }
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+      searchQuery = e.target.value.toLowerCase().trim();
+      applyFilters();
+    });
+  }
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.getAttribute('data-filter');
+      applyFilters();
+    });
+  });
+});
+</script>
 {% endblock %}

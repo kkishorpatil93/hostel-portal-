@@ -1,0 +1,296 @@
+{% extends "portal_base.html" %}
+
+{% block title %}Occupancy Report & Analytics{% endblock %}
+{% block breadcrumb %}Occupancy Details{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.65rem;">
+      <span>Occupancy Report & Room Analytics</span>
+      <span class="status-pill {% if occupancy_pct >= 80 %}success{% elif occupancy_pct >= 50 %}info{% else %}warning{% endif %}" style="font-size: 0.75rem;">
+        {{ occupancy_pct }}% Overall Occupancy
+      </span>
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+      Detailed room-by-room bed capacity, resident distribution, and occupancy performance.
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center;">
+    <a href="{{ url_for('owner.rooms') }}" class="btn btn-outline-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+      <span>🛏️</span>
+      <span>Manage Beds</span>
+    </a>
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+      <span>&larr;</span>
+      <span>Back to Dashboard</span>
+    </a>
+  </div>
+</div>
+
+<!-- KPI Summary Counters -->
+<div class="kpi-grid" style="margin-bottom: 1.75rem;">
+  <div class="stat-card accent-primary" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Total Active Rooms</span>
+      <span class="stat-card-icon">🚪</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem;">{{ total_rooms }}</div>
+    <div class="stat-card-meta"><span>Configured in building</span></div>
+  </div>
+
+  <div class="stat-card accent-info" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Total Bed Capacity</span>
+      <span class="stat-card-icon">🛏️</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem;">{{ total_beds }}</div>
+    <div class="stat-card-meta"><span>Across all room types</span></div>
+  </div>
+
+  <div class="stat-card accent-warning" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Occupied Beds</span>
+      <span class="stat-card-icon">👥</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-warning);">{{ occupied_beds }}</div>
+    <div class="stat-card-meta"><span>Currently residing tenants</span></div>
+  </div>
+
+  <div class="stat-card accent-success" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Vacant Beds</span>
+      <span class="stat-card-icon">✨</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-success);">{{ vacant_beds }}</div>
+    <div class="stat-card-meta"><span>Available for new admissions</span></div>
+  </div>
+</div>
+
+<!-- Overall Occupancy Benchmark Card -->
+<div class="portal-card" style="margin-bottom: 1.75rem; padding: 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+    <div>
+      <h3 style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">
+        Occupancy Rate Benchmark
+      </h3>
+      <div style="font-size: 0.85rem; color: var(--text-muted);">
+        Formula: <code style="background: var(--bg-subtle); padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); color: var(--color-primary); font-weight: 600;">(Occupied Beds / Total Beds) &times; 100</code>
+        &rarr; <strong>({{ occupied_beds }} / {{ total_beds }}) &times; 100 = {{ occupancy_pct }}%</strong>
+      </div>
+    </div>
+    <div style="font-size: 2rem; font-weight: 800; color: {% if occupancy_pct >= 80 %}var(--color-success){% elif occupancy_pct >= 50 %}var(--color-info){% else %}var(--color-warning){% endif %};">
+      {{ occupancy_pct }}%
+    </div>
+  </div>
+
+  <!-- Big Visual Progress Bar -->
+  <div style="width: 100%; height: 12px; background: var(--bg-subtle); border-radius: var(--radius-full); overflow: hidden; border: 1px solid var(--border-color);">
+    <div style="width: {{ occupancy_pct }}%; height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-accent)); border-radius: var(--radius-full); transition: width 0.6s ease;"></div>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; margin-top: 0.65rem; font-size: 0.775rem; color: var(--text-muted);">
+    <span>0% (Totally Empty)</span>
+    <span>50% (Break-even Target)</span>
+    <span>100% (Full Capacity)</span>
+  </div>
+</div>
+
+<!-- Search & Status Filter Toolbar -->
+<div class="filter-toolbar">
+  <div class="search-input-wrapper">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="occupancy-search-input" placeholder="Search by room number, sharing type, floor, or resident name..." aria-label="Search rooms">
+  </div>
+
+  <div class="filter-pills-group" role="tablist" aria-label="Filter rooms by occupancy">
+    <button type="button" class="filter-pill-btn active" data-filter="all">All Rooms ({{ rooms|length }})</button>
+    <button type="button" class="filter-pill-btn" data-filter="vacant">Vacant</button>
+    <button type="button" class="filter-pill-btn" data-filter="partially occupied">Partially Occupied</button>
+    <button type="button" class="filter-pill-btn" data-filter="fully occupied">Fully Occupied</button>
+  </div>
+</div>
+
+<!-- Room-Wise Occupancy Breakdown Table -->
+<div class="portal-card" style="padding: 0; overflow: hidden;">
+  <div class="portal-card-header" style="padding: 1.25rem 1.5rem; margin-bottom: 0; border-bottom: 1px solid var(--border-color);">
+    <div class="portal-card-title">
+      <span>🏢</span>
+      <span>Room-Wise Occupancy Breakdown</span>
+    </div>
+    <span style="font-size: 0.8rem; color: var(--text-muted);">Detailed capacity and resident status for every room</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="portal-table" id="occupancy-table">
+      <thead>
+        <tr>
+          <th style="width: 120px;">Room #</th>
+          <th style="width: 160px;">Sharing Type</th>
+          <th style="width: 100px;">Capacity</th>
+          <th style="width: 110px;">Occupied</th>
+          <th style="width: 110px;">Vacant</th>
+          <th style="width: 160px;">Occupancy %</th>
+          <th style="width: 140px;">Status</th>
+          <th>Active Residents & Assigned Beds</th>
+        </tr>
+      </thead>
+      <tbody id="occupancy-tbody">
+        {% if rooms %}
+          {% for r in rooms %}
+            {% set room_occ_pct = (r.occupied_beds / r.total_beds * 100)|round(1) if r.total_beds > 0 else 0.0 %}
+            <tr class="occupancy-row"
+                data-room="{{ r.room_number }}"
+                data-status="{{ r.occupancy_status|lower }}"
+                data-search="room {{ r.room_number|lower }} floor {{ r.floor }} {{ r.room_type|lower }} {% for bed in r.beds %}{% if bed.current_allocation %}{{ bed.current_allocation.tenant.full_name|lower }} {{ bed.bed_label|lower }} {% endif %}{% endfor %}">
+              
+              <!-- Room Number & Floor -->
+              <td>
+                <div style="font-weight: 700; color: var(--color-primary); font-size: 1.05rem;">
+                  Room {{ r.room_number }}
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Floor {{ r.floor }}</div>
+              </td>
+
+              <!-- Sharing Type -->
+              <td>
+                <div style="font-weight: 600; color: var(--text-main);">{{ r.room_type }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ currency_symbol }}{{ r.monthly_rent|inr }}/mo per bed</div>
+              </td>
+
+              <!-- Total Beds -->
+              <td style="font-weight: 600; color: var(--text-main);">
+                {{ r.total_beds }} Beds
+              </td>
+
+              <!-- Occupied Beds -->
+              <td>
+                <span style="font-weight: 700; color: {% if r.occupied_beds > 0 %}var(--color-warning){% else %}var(--text-muted){% endif %};">
+                  {{ r.occupied_beds }}
+                </span>
+              </td>
+
+              <!-- Vacant Beds -->
+              <td>
+                <span style="font-weight: 700; color: {% if r.vacant_beds > 0 %}var(--color-success){% else %}var(--text-muted){% endif %};">
+                  {{ r.vacant_beds }}
+                </span>
+              </td>
+
+              <!-- Room Occupancy % & Mini Bar -->
+              <td>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                  <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-main);">{{ room_occ_pct }}%</span>
+                </div>
+                <div style="width: 100%; height: 6px; background: var(--bg-subtle); border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="width: {{ room_occ_pct }}%; height: 100%; background: {% if room_occ_pct == 100 %}var(--color-success){% elif room_occ_pct > 0 %}var(--color-warning){% else %}var(--color-neutral-300){% endif %}; border-radius: var(--radius-full);"></div>
+                </div>
+              </td>
+
+              <!-- Status Pill -->
+              <td>
+                {% if r.occupancy_status == 'Fully Occupied' %}
+                  <span class="status-pill danger">Fully Occupied</span>
+                {% elif r.occupancy_status == 'Partially Occupied' %}
+                  <span class="status-pill warning">Partially Occupied</span>
+                {% else %}
+                  <span class="status-pill success">Vacant</span>
+                {% endif %}
+              </td>
+
+              <!-- Residents & Allocated Beds -->
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                  {% set has_residents = false %}
+                  {% for bed in r.beds %}
+                    {% if bed.current_allocation %}
+                      {% set has_residents = true %}
+                      <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                        <span class="status-pill info" style="font-size: 0.7rem; padding: 0.1rem 0.45rem;">{{ bed.bed_label }}</span>
+                        <strong style="color: var(--text-main);">{{ bed.current_allocation.tenant.full_name }}</strong>
+                        <span style="color: var(--text-muted); font-size: 0.75rem;">(📞 {{ bed.current_allocation.tenant.phone }})</span>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                  {% if not has_residents %}
+                    <span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">
+                      ✨ All beds vacant and ready for admission
+                    </span>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+              No rooms configured in this property.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Dynamic Search / Filter Empty Message -->
+<div id="filter-no-results" style="display: none; text-align: center; padding: 3rem 1.5rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); margin-top: 1rem;">
+  <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+  <div style="font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">No matching rooms found</div>
+  <p style="color: var(--text-muted); font-size: 0.875rem;">Try modifying your search criteria or switching the filter tab.</p>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('occupancy-search-input');
+  const filterButtons = document.querySelectorAll('.filter-pill-btn');
+  const rows = document.querySelectorAll('.occupancy-row');
+  const noResultsBox = document.getElementById('filter-no-results');
+
+  let currentFilter = 'all';
+  let searchQuery = '';
+
+  function applyFilters() {
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const rowStatus = row.getAttribute('data-status');
+      const searchText = row.getAttribute('data-search') || '';
+
+      const matchesStatus = (currentFilter === 'all') || (currentFilter === rowStatus);
+      const matchesSearch = !searchQuery || searchText.includes(searchQuery);
+
+      if (matchesStatus && matchesSearch) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (rows.length > 0) {
+      noResultsBox.style.display = (visibleCount === 0) ? 'block' : 'none';
+    }
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+      searchQuery = e.target.value.toLowerCase().trim();
+      applyFilters();
+    });
+  }
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.getAttribute('data-filter');
+      applyFilters();
+    });
+  });
+});
+</script>
+{% endblock %}

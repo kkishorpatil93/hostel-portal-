@@ -1,64 +1,453 @@
-{% extends "base.html" %}
+{% extends "portal_base.html" %}
 
-{% block title %}Rent & Billing — Owner Portal{% endblock %}
+{% block title %}Rent Accounts & Pending Payments{% endblock %}
+{% block breadcrumb %}Rent & Collections{% endblock %}
 
 {% block content %}
-<section style="padding: 2.5rem 0;">
-  <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-      <div>
-        <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--color-primary);">Rent Charges & Billing</h1>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Track monthly invoices, dues, overdue rent, and verified payments.</p>
-      </div>
-      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
-    </div>
+<!-- Page Header -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.65rem;">
+      <span>Rent Accounts & Pending Payments</span>
+      <span class="status-pill {% if outstanding_rent > 0 %}danger{% else %}success{% endif %}" style="font-size: 0.75rem;">
+        {% if outstanding_rent > 0 %}{{ currency_symbol }}{{ outstanding_rent|inr }} Outstanding{% else %}All Settled{% endif %}
+      </span>
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+      Real-time billing ledgers, payment tracking, overdue monitoring, and offline payment recording.
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center;">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+      <span>&larr;</span>
+      <span>Back to Dashboard</span>
+    </a>
+  </div>
+</div>
 
-    <div class="card table-responsive" style="padding: 0;">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Billing Month</th>
-            <th>Tenant</th>
-            <th>Amount Due</th>
-            <th>Paid</th>
-            <th>Outstanding</th>
-            <th>Due Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for chg in charges %}
-          <tr>
-            <td><strong>{{ chg.billing_month.strftime('%B %Y') }}</strong></td>
-            <td>{{ chg.tenant.full_name }}</td>
-            <td>{{ currency_symbol }}{{ chg.total_due|inr }}</td>
-            <td style="color: var(--color-success); font-weight: 600;">{{ currency_symbol }}{{ chg.total_paid|inr }}</td>
-            <td style="color: {{ 'var(--color-danger)' if chg.outstanding_balance > 0 else 'var(--text-muted)' }}; font-weight: 600;">
-              {{ currency_symbol }}{{ chg.outstanding_balance|inr }}
-            </td>
-            <td>{{ chg.due_date|date_fmt }}</td>
-            <td>
-              {% if chg.status == 'PAID' %}
-                <span class="badge badge-success">Paid</span>
-              {% elif chg.status == 'PARTIAL' %}
-                <span class="badge badge-warning">Partial</span>
-              {% elif chg.status == 'OVERDUE' %}
-                <span class="badge badge-danger">Overdue</span>
-              {% else %}
-                <span class="badge badge-neutral">Pending</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-              No rent charges generated yet. Run `flask generate-rent` or seed demo data.
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+<!-- KPI Summary Counters -->
+<div class="kpi-grid" style="margin-bottom: 1.75rem;">
+  <div class="stat-card accent-primary" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Total Invoiced</span>
+      <span class="stat-card-icon">📄</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem;">{{ currency_symbol }}{{ total_invoiced|inr }}</div>
+    <div class="stat-card-meta"><span>Cumulative monthly billing</span></div>
+  </div>
+
+  <div class="stat-card accent-success" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Rent Collected</span>
+      <span class="stat-card-icon">💰</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-success);">{{ currency_symbol }}{{ rent_collected|inr }}</div>
+    <div class="stat-card-meta"><span>Verified payment inflow</span></div>
+  </div>
+
+  <div class="stat-card {% if outstanding_rent > 0 %}accent-danger{% else %}accent-success{% endif %}" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Outstanding Rent</span>
+      <span class="stat-card-icon">⏳</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem; color: {% if outstanding_rent > 0 %}var(--color-danger){% else %}var(--color-success){% endif %};">
+      {{ currency_symbol }}{{ outstanding_rent|inr }}
+    </div>
+    <div class="stat-card-meta">
+      <span>{{ pending_count }} pending ledger(s)</span>
     </div>
   </div>
-</section>
+
+  <div class="stat-card accent-warning" style="padding: 1rem 1.25rem;">
+    <div class="stat-card-header" style="margin-bottom: 0.4rem;">
+      <span class="stat-card-title">Overdue Accounts</span>
+      <span class="stat-card-icon">⚠️</span>
+    </div>
+    <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-warning);">{{ overdue_count }}</div>
+    <div class="stat-card-meta"><span>Past payment due date</span></div>
+  </div>
+</div>
+
+<!-- Search & Status Filter Toolbar -->
+<div class="filter-toolbar">
+  <div class="search-input-wrapper">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="rent-search-input" placeholder="Search by tenant name, phone, room, or month (e.g. October 2026)..." aria-label="Search rent records">
+  </div>
+
+  <div class="filter-pills-group" role="tablist" aria-label="Filter rent records">
+    <button type="button" class="filter-pill-btn {% if active_view == 'all' %}active{% endif %}" data-filter="all">All Records ({{ charges|length }})</button>
+    <button type="button" class="filter-pill-btn {% if active_view == 'pending' %}active{% endif %}" data-filter="pending">Pending Dues ({{ pending_count }})</button>
+    <button type="button" class="filter-pill-btn" data-filter="overdue">Overdue ({{ overdue_count }})</button>
+    <button type="button" class="filter-pill-btn {% if active_view == 'paid' %}active{% endif %}" data-filter="paid">Fully Settled ({{ paid_count }})</button>
+  </div>
+</div>
+
+<!-- Rent Charges Ledger Table -->
+<div class="portal-card" style="padding: 0; overflow: hidden; margin-bottom: 2rem;">
+  <div class="portal-card-header" style="padding: 1.25rem 1.5rem; margin-bottom: 0; border-bottom: 1px solid var(--border-color);">
+    <div class="portal-card-title">
+      <span>📋</span>
+      <span>Monthly Billing Ledger</span>
+    </div>
+    <span style="font-size: 0.8rem; color: var(--text-muted);">Calculated from live transactions and rent charges</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="portal-table" id="rent-table">
+      <thead>
+        <tr>
+          <th style="width: 130px;">Billing Month</th>
+          <th style="width: 180px;">Tenant & Contact</th>
+          <th style="width: 140px;">Room & Bed</th>
+          <th style="width: 120px;">Monthly Rent</th>
+          <th style="width: 120px;">Amount Paid</th>
+          <th style="width: 130px;">Remaining Balance</th>
+          <th style="width: 110px;">Due Date</th>
+          <th style="width: 120px;">Status</th>
+          <th style="width: 160px; text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="rent-tbody">
+        {% if charges %}
+          {% for chg in charges %}
+            <tr class="rent-row"
+                data-id="{{ chg.id }}"
+                data-status="{% if chg.outstanding_balance == 0 %}paid{% elif chg.status == 'OVERDUE' %}overdue{% else %}pending{% endif %}"
+                data-search="{{ chg.tenant.full_name|lower }} {{ chg.tenant.phone }} {{ chg.tenant.email|lower }} {% if chg.allocation and chg.allocation.bed %}room {{ chg.allocation.bed.room.room_number|lower }} {{ chg.allocation.bed.bed_label|lower }}{% endif %} {{ chg.billing_month.strftime('%B %Y')|lower }}">
+              
+              <!-- Billing Month -->
+              <td>
+                <strong style="color: var(--text-main);">{{ chg.billing_month.strftime('%B %Y') }}</strong>
+                <div style="font-size: 0.725rem; color: var(--text-muted);">Invoice #RC-{{ chg.id }}</div>
+              </td>
+
+              <!-- Tenant Info -->
+              <td>
+                <div style="font-weight: 600; color: var(--text-main);">{{ chg.tenant.full_name }}</div>
+                <div style="font-size: 0.775rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.2rem;">
+                  <span>📞 {{ chg.tenant.phone or 'No phone' }}</span>
+                  <span style="text-overflow: ellipsis; overflow: hidden; max-width: 160px;">✉️ {{ chg.tenant.email }}</span>
+                </div>
+              </td>
+
+              <!-- Room & Bed -->
+              <td>
+                {% if chg.allocation and chg.allocation.bed %}
+                  <div style="font-weight: 600; color: var(--text-main);">Room {{ chg.allocation.bed.room.room_number }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">{{ chg.allocation.bed.bed_label }} &bull; {{ chg.allocation.bed.room.room_type }}</div>
+                {% else %}
+                  <span class="status-pill neutral">Unassigned</span>
+                {% endif %}
+              </td>
+
+              <!-- Total Invoiced Due -->
+              <td>
+                <div style="font-weight: 600; color: var(--text-main);">{{ currency_symbol }}{{ chg.total_due|inr }}</div>
+                {% if chg.late_fee and chg.late_fee > 0 %}
+                  <div style="font-size: 0.725rem; color: var(--color-danger);">+{{ currency_symbol }}{{ chg.late_fee|inr }} Late Fee</div>
+                {% endif %}
+              </td>
+
+              <!-- Amount Paid -->
+              <td>
+                <span style="color: var(--color-success); font-weight: 600;">
+                  {{ currency_symbol }}{{ chg.total_paid|inr }}
+                </span>
+                <div style="font-size: 0.725rem; color: var(--text-muted);">
+                  {{ chg.payments.count() }} payment(s)
+                </div>
+              </td>
+
+              <!-- Remaining Balance -->
+              <td>
+                <span style="font-weight: 700; color: {% if chg.outstanding_balance > 0 %}var(--color-danger){% else %}var(--color-success){% endif %}; font-size: 0.95rem;">
+                  {{ currency_symbol }}{{ chg.outstanding_balance|inr }}
+                </span>
+              </td>
+
+              <!-- Due Date -->
+              <td style="color: var(--text-muted); font-size: 0.85rem;">
+                {{ chg.due_date|date_fmt }}
+              </td>
+
+              <!-- Status -->
+              <td>
+                {% if chg.outstanding_balance == 0 or chg.status == 'PAID' %}
+                  <span class="status-pill success">Settled</span>
+                {% elif chg.status == 'PARTIAL' %}
+                  <span class="status-pill warning">Partially Paid</span>
+                {% elif chg.status == 'OVERDUE' %}
+                  <span class="status-pill danger">Overdue</span>
+                {% else %}
+                  <span class="status-pill info">Payment Due</span>
+                {% endif %}
+              </td>
+
+              <!-- Action: Record Payment -->
+              <td style="text-align: right;">
+                {% if chg.outstanding_balance > 0 %}
+                  <button type="button" class="btn btn-primary btn-sm open-pay-btn"
+                          data-charge-id="{{ chg.id }}"
+                          data-tenant="{{ chg.tenant.full_name }}"
+                          data-room="{% if chg.allocation and chg.allocation.bed %}Room {{ chg.allocation.bed.room.room_number }}{% else %}-{% endif %}"
+                          data-balance="{{ chg.outstanding_balance }}"
+                          data-month="{{ chg.billing_month.strftime('%B %Y') }}"
+                          style="padding: 0.35rem 0.75rem; font-size: 0.775rem;">
+                    💵 Record Payment
+                  </button>
+                {% else %}
+                  <span style="color: var(--color-success); font-size: 0.8rem; font-weight: 500;">
+                    ✓ Zero Balance
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr id="empty-table-row">
+            <td colspan="9" style="text-align: center; padding: 3.5rem 1.5rem;">
+              <div style="font-size: 2.75rem; margin-bottom: 0.75rem;">💳</div>
+              <div style="font-weight: 600; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.35rem;">Zero Billing Records Generated</div>
+              <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 420px; margin: 0 auto;">
+                When monthly rent charges are generated for active tenant allocations, they will appear in this ledger with instant payment recording options.
+              </p>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Dynamic Search / Filter Empty Message -->
+<div id="filter-no-results" style="display: none; text-align: center; padding: 3rem 1.5rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); margin-top: 1rem; margin-bottom: 2rem;">
+  <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+  <div style="font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">No matching rent records found</div>
+  <p style="color: var(--text-muted); font-size: 0.875rem;">Try modifying your search criteria or selecting another filter pill.</p>
+</div>
+
+<!-- Verified Payment Receipts Ledger -->
+<div class="portal-card" style="padding: 0; overflow: hidden;">
+  <div class="portal-card-header" style="padding: 1.25rem 1.5rem; margin-bottom: 0; border-bottom: 1px solid var(--border-color);">
+    <div class="portal-card-title">
+      <span>🧾</span>
+      <span>Recent Verified Payment Receipts</span>
+    </div>
+    <span style="font-size: 0.8rem; color: var(--text-muted);">Real-time payment transaction log</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="portal-table">
+      <thead>
+        <tr>
+          <th>Receipt Number</th>
+          <th>Tenant</th>
+          <th>Amount Paid</th>
+          <th>Payment Mode</th>
+          <th>Reference / Note</th>
+          <th>Date & Time</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if payments %}
+          {% for p in payments %}
+            <tr>
+              <td>
+                <span style="font-family: monospace; font-weight: 700; color: var(--color-primary);">{{ p.receipt_number }}</span>
+              </td>
+              <td>
+                <div style="font-weight: 600; color: var(--text-main);">{{ p.tenant.full_name }}</div>
+              </td>
+              <td style="color: var(--color-success); font-weight: 700;">
+                {{ currency_symbol }}{{ p.amount|inr }}
+              </td>
+              <td>
+                <span class="status-pill neutral" style="text-transform: uppercase; font-size: 0.725rem;">{{ p.method }}</span>
+              </td>
+              <td style="color: var(--text-muted); font-size: 0.85rem;">
+                {{ p.transaction_reference or p.notes or '-' }}
+              </td>
+              <td style="color: var(--text-muted); font-size: 0.85rem;">
+                {{ p.paid_at|date_fmt }}
+              </td>
+              <td>
+                <span class="status-pill success">{{ p.status }}</span>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              No payments recorded yet.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Record Payment Modal -->
+<div id="payment-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center;">
+  <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); width: 100%; max-width: 480px; margin: 1rem; box-shadow: var(--shadow-xl); overflow: hidden;">
+    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+        <span>💵</span>
+        <span>Record Tenant Payment</span>
+      </h3>
+      <button type="button" id="close-modal-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; line-height: 1;">&times;</button>
+    </div>
+
+    <form id="record-payment-form" action="" method="POST" style="padding: 1.5rem;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: var(--bg-subtle); border-radius: var(--radius-md); font-size: 0.875rem;">
+        <div><strong>Tenant:</strong> <span id="modal-tenant-name">-</span></div>
+        <div><strong>Room:</strong> <span id="modal-room-name">-</span></div>
+        <div><strong>Billing Cycle:</strong> <span id="modal-month">-</span></div>
+        <div style="margin-top: 0.25rem; font-size: 0.95rem;">
+          <strong>Remaining Balance:</strong> 
+          <span style="color: var(--color-danger); font-weight: 700;" id="modal-balance-display">-</span>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="payment-amount" style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">
+          Payment Amount (₹) *
+        </label>
+        <input type="number" step="0.01" min="1" name="amount" id="payment-amount" required class="form-control" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; color: var(--text-main);">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label for="payment-method" style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">
+          Payment Method *
+        </label>
+        <select name="method" id="payment-method" class="form-control" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+          <option value="upi">UPI (GPay, PhonePe, Paytm)</option>
+          <option value="cash">Cash in Hand</option>
+          <option value="bank">Direct Bank Transfer (NEFT/IMPS)</option>
+          <option value="online">Online Card / Net Banking</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label for="payment-reference" style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">
+          Transaction Reference / UTR Number
+        </label>
+        <input type="text" name="transaction_reference" id="payment-reference" placeholder="e.g. UPI Ref 584930219482" class="form-control" style="width: 100%; padding: 0.65rem 0.85rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button type="button" id="cancel-modal-btn" class="btn btn-secondary btn-sm" style="padding: 0.5rem 1rem;">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.5rem 1.25rem; font-weight: 600;">Record & Issue Receipt</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('rent-search-input');
+  const filterButtons = document.querySelectorAll('.filter-pill-btn');
+  const rows = document.querySelectorAll('.rent-row');
+  const noResultsBox = document.getElementById('filter-no-results');
+
+  // Modal elements
+  const modal = document.getElementById('payment-modal');
+  const openPayBtns = document.querySelectorAll('.open-pay-btn');
+  const closeModalBtn = document.getElementById('close-modal-btn');
+  const cancelModalBtn = document.getElementById('cancel-modal-btn');
+  const payForm = document.getElementById('record-payment-form');
+  const modalTenant = document.getElementById('modal-tenant-name');
+  const modalRoom = document.getElementById('modal-room-name');
+  const modalMonth = document.getElementById('modal-month');
+  const modalBalance = document.getElementById('modal-balance-display');
+  const amountInput = document.getElementById('payment-amount');
+
+  let currentFilter = '{{ active_view or "all" }}';
+  let searchQuery = '';
+
+  function applyFilters() {
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const rowStatus = row.getAttribute('data-status');
+      const searchText = row.getAttribute('data-search') || '';
+
+      const matchesStatus = (currentFilter === 'all') || 
+                            (currentFilter === 'pending' && (rowStatus === 'pending' || rowStatus === 'overdue')) ||
+                            (currentFilter === 'overdue' && rowStatus === 'overdue') ||
+                            (currentFilter === 'paid' && rowStatus === 'paid');
+
+      const matchesSearch = !searchQuery || searchText.includes(searchQuery);
+
+      if (matchesStatus && matchesSearch) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (rows.length > 0) {
+      noResultsBox.style.display = (visibleCount === 0) ? 'block' : 'none';
+    }
+  }
+
+  // Initial filter application
+  applyFilters();
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+      searchQuery = e.target.value.toLowerCase().trim();
+      applyFilters();
+    });
+  }
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.getAttribute('data-filter');
+      applyFilters();
+    });
+  });
+
+  // Modal Open Handler
+  openPayBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const chargeId = this.getAttribute('data-charge-id');
+      const tenant = this.getAttribute('data-tenant');
+      const room = this.getAttribute('data-room');
+      const month = this.getAttribute('data-month');
+      const balance = parseFloat(this.getAttribute('data-balance') || '0').toFixed(2);
+
+      payForm.action = `/owner/rent/${chargeId}/pay`;
+      modalTenant.textContent = tenant;
+      modalRoom.textContent = room;
+      modalMonth.textContent = month;
+      modalBalance.textContent = `₹${balance}`;
+      amountInput.value = balance;
+      amountInput.max = balance;
+
+      modal.style.display = 'flex';
+    });
+  });
+
+  function closeModal() {
+    modal.style.display = 'none';
+  }
+
+  if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+  if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
+
+  window.addEventListener('click', function(e) {
+    if (e.target === modal) closeModal();
+  });
+});
+</script>
 {% endblock %}

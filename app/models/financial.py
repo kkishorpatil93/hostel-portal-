@@ -47,6 +47,7 @@ class RentCharge(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
+    tenant = db.relationship("User", foreign_keys=[tenant_id])
     payments = db.relationship("Payment", backref="rent_charge", lazy="dynamic", cascade="all, delete-orphan")
 
     @property
@@ -106,6 +107,7 @@ class Payment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
+    tenant = db.relationship("User", foreign_keys=[tenant_id])
     recorder = db.relationship("User", foreign_keys=[recorded_by])
 
     def __repr__(self):

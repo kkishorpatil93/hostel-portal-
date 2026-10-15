@@ -175,3 +175,186 @@ def test_rooms_and_beds_details_page(client):
     assert "Fully Occupied" in html
 
 
+def test_complaints_details_page_and_status_update(client):
+    """Complaints page should render tickets and allow updating ticket status with notes."""
+    tenant = User.query.filter_by(email="arjun.sharma@example.com").first()
+    room_101 = Room.query.filter_by(room_number="101").first()
+
+    complaint = Complaint(
+        tenant_id=tenant.id,
+        room_id=room_101.id,
+        title="AC remote control not working",
+        description="Batteries replaced but display remains blank.",
+        category=ComplaintCategory.ELECTRICAL,
+        priority=ComplaintPriority.HIGH,
+        status=ComplaintStatus.OPEN,
+    )
+    db.session.add(complaint)
+    db.session.commit()
+
+    # GET /owner/complaints
+    res = client.get("/owner/complaints")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+    assert "Maintenance" in html
+    assert "AC remote control not working" in html
+    assert "Arjun Sharma" in html
+    assert "Room 101" in html
+    assert "High" in html
+
+    # POST /owner/complaints/<id>/status
+    post_res = client.post(
+        f"/owner/complaints/{complaint.id}/status",
+        data={"status": "IN_PROGRESS", "owner_response": "Technician scheduled for 4 PM"},
+        follow_redirects=True,
+    )
+    assert post_res.status_code == 200
+    updated_html = post_res.get_data(as_text=True)
+    assert "In Progress" in updated_html
+    assert "Technician scheduled for 4 PM" in updated_html
+
+    # Check database
+    updated_complaint = Complaint.query.get(complaint.id)
+    assert updated_complaint.status == ComplaintStatus.IN_PROGRESS
+    assert updated_complaint.owner_response == "Technician scheduled for 4 PM"
+
+
+def test_bookings_details_page_approve_and_double_booking_prevention(client):
+    """Approving a booking allocates a bed, and prevents double-booking if no beds are vacant."""
+    tenant = User.query.filter_by(email="arjun.sharma@example.com").first()
+    room_101 = Room.query.filter_by(room_number="101").first()
+    room_102 = Room.query.filter_by(room_number="102").first()
+
+    # Room 101 already has Bed A occupied in demo seed. Capacity is 1 bed, so it has 0 vacant beds!
+    booking_full_room = Booking(
+        tenant_id=tenant.id,
+        room_id=room_101.id,
+        requested_move_in_date=date(2026, 11, 1),
+        status=BookingStatus.PENDING,
+    )
+    # Room 102 has 2 beds, both vacant.
+    booking_vacant_room = Booking(
+        tenant_id=tenant.id,
+        room_id=room_102.id,
+        requested_move_in_date=date(2026, 11, 5),
+        status=BookingStatus.PENDING,
+    )
+    db.session.add_all([booking_full_room, booking_vacant_room])
+    db.session.commit()
+
+    # GET /owner/bookings
+    res = client.get("/owner/bookings")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+    assert "Booking Requests" in html
+    assert "Room 101" in html
+    assert "Room 102" in html
+
+    # 1. Test Double-Booking Prevention: Attempt to approve booking for Room 101 (0 vacant beds)
+    res_full = client.post(
+        f"/owner/bookings/{booking_full_room.id}/approve",
+        data={},
+        follow_redirects=True,
+    )
+    assert res_full.status_code == 200
+    html_full = res_full.get_data(as_text=True)
+    assert "has no vacant beds available" in html_full
+    assert Booking.query.get(booking_full_room.id).status == BookingStatus.PENDING
+
+    # 2. Test Successful Approval: Approve booking for Room 102 (vacant beds available)
+    res_vacant = client.post(
+        f"/owner/bookings/{booking_vacant_room.id}/approve",
+        data={"owner_notes": "Welcome to StayNest"},
+        follow_redirects=True,
+    )
+    assert res_vacant.status_code == 200
+    html_vacant = res_vacant.get_data(as_text=True)
+    assert "approved" in html_vacant.lower()
+    approved_booking = Booking.query.get(booking_vacant_room.id)
+    assert approved_booking.status == BookingStatus.APPROVED
+    assert approved_booking.allocation is not None
+
+
+def test_bookings_details_page_reject(client):
+    """Owner can decline or reject a booking with a rejection reason."""
+    tenant = User.query.filter_by(email="arjun.sharma@example.com").first()
+    room_102 = Room.query.filter_by(room_number="102").first()
+
+    booking = Booking(
+        tenant_id=tenant.id,
+        room_id=room_102.id,
+        requested_move_in_date=date(2026, 12, 1),
+        status=BookingStatus.PENDING,
+    )
+    db.session.add(booking)
+    db.session.commit()
+
+    res = client.post(
+        f"/owner/bookings/{booking.id}/reject",
+        data={"rejection_reason": "Requested dates conflict with maintenance schedule"},
+        follow_redirects=True,
+    )
+    assert res.status_code == 200
+    assert "rejected" in res.get_data(as_text=True).lower()
+    updated_b = Booking.query.get(booking.id)
+    assert updated_b.status == BookingStatus.REJECTED
+    assert updated_b.rejection_reason == "Requested dates conflict with maintenance schedule"
+
+
+def test_pending_rent_details_page_and_record_payment(client):
+    """Pending rent page should calculate remaining balance and allow recording offline payments."""
+    charge = RentCharge.query.first()
+    initial_outstanding = charge.outstanding_balance
+
+    # GET /owner/pending-payments and /owner/rent
+    res = client.get("/owner/pending-payments")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+    assert "Rent Accounts" in html
+    assert "Record Payment" in html
+    assert "Remaining Balance" in html
+
+    # Record a partial payment of ₹5,000.00
+    pay_res = client.post(
+        f"/owner/rent/{charge.id}/pay",
+        data={
+            "amount": "5000.00",
+            "method": "upi",
+            "transaction_reference": "UPI-TEST-12345",
+            "notes": "Paid via Google Pay",
+        },
+        follow_redirects=True,
+    )
+    assert pay_res.status_code == 200
+    html_after = pay_res.get_data(as_text=True)
+    assert "recorded successfully" in html_after.lower()
+    assert "REC-" in html_after
+
+    # Verify charge updated in DB
+    db.session.refresh(charge)
+    assert charge.outstanding_balance == initial_outstanding - Decimal("5000.00")
+    assert charge.total_paid == Decimal("5000.00")
+    assert charge.status == "PARTIAL"
+
+
+def test_occupancy_report_details_page(client):
+    """Occupancy report page should render formula, overall occupancy %, and room-wise breakdown."""
+    res = client.get("/owner/occupancy-report")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+
+    assert "Occupancy Report" in html
+    assert "Occupancy Rate Benchmark" in html
+    assert "(Occupied Beds / Total Beds)" in html
+    assert "Room-Wise Occupancy Breakdown" in html
+    assert "Room 101" in html
+    assert "Room 102" in html
+    assert "Room 201" in html
+    assert "Room 202" in html
+    assert "Total Active Rooms" in html
+    assert "Total Bed Capacity" in html
+    assert "Occupied Beds" in html
+    assert "Vacant Beds" in html
+
+
+
