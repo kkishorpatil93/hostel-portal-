@@ -20,6 +20,8 @@ def login():
         password = request.form.get("password", "")
 
         user = User.query.filter_by(email=email).first()
+        if not user and email in ("owner", "admin", "kishor", "kishor@staynest.local"):
+            user = User.query.filter_by(role=UserRole.OWNER).first()
         if user and user.check_password(password):
             if not user.is_active:
                 flash("Your account has been deactivated. Please contact the PG owner.", "danger")
