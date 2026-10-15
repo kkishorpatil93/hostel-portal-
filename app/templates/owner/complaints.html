@@ -7,11 +7,8 @@
 <!-- Page Header -->
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.65rem;">
-      <span>Maintenance & Grievances</span>
-      <span class="status-pill {% if open_complaints > 0 %}danger{% else %}success{% endif %}" style="font-size: 0.75rem;">
-        {% if open_complaints > 0 %}{{ open_complaints }} Open Issues{% else %}All Resolved{% endif %}
-      </span>
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">
+      Maintenance & Grievances
     </h1>
     <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
       Track, triage, and update tenant repair tickets, facility complaints, and maintenance resolutions.
@@ -19,7 +16,7 @@
   </div>
   <div style="display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center;">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-      <span>&larr;</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       <span>Back to Dashboard</span>
     </a>
   </div>
@@ -30,7 +27,9 @@
   <div class="stat-card accent-primary" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Total Complaints</span>
-      <span class="stat-card-icon">🛠️</span>
+      <span class="stat-card-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem;">{{ total_complaints }}</div>
     <div class="stat-card-meta"><span>Logged across all rooms</span></div>
@@ -39,7 +38,9 @@
   <div class="stat-card accent-danger" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Open Tickets</span>
-      <span class="stat-card-icon">⚠️</span>
+      <span class="stat-card-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-danger);">{{ open_complaints }}</div>
     <div class="stat-card-meta"><span>Awaiting technician or action</span></div>
@@ -48,7 +49,9 @@
   <div class="stat-card accent-warning" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">In Progress</span>
-      <span class="stat-card-icon">⏳</span>
+      <span class="stat-card-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-warning);">{{ in_progress_complaints }}</div>
     <div class="stat-card-meta"><span>Currently being addressed</span></div>
@@ -57,7 +60,9 @@
   <div class="stat-card accent-success" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Resolved & Closed</span>
-      <span class="stat-card-icon">✅</span>
+      <span class="stat-card-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-success);">{{ resolved_complaints }}</div>
     <div class="stat-card-meta"><span>Successfully fixed</span></div>
@@ -67,7 +72,9 @@
 <!-- Search, Filter & Sort Toolbar -->
 <div class="filter-toolbar">
   <div class="search-input-wrapper">
-    <span class="search-icon">🔍</span>
+    <span class="search-icon" aria-hidden="true" style="display: inline-flex; align-items: center;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    </span>
     <input type="text" id="complaint-search-input" placeholder="Search by ticket #, tenant, room, category, or keywords..." aria-label="Search complaints">
   </div>
 
@@ -113,8 +120,8 @@
               <td>
                 <div style="font-weight: 600; color: var(--text-main);">{{ c.tenant.full_name }}</div>
                 <div style="font-size: 0.775rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.2rem;">
-                  <span>📞 {{ c.tenant.phone or 'No phone' }}</span>
-                  <span style="text-overflow: ellipsis; overflow: hidden; max-width: 160px;">✉️ {{ c.tenant.email }}</span>
+                  <span>{{ c.tenant.phone or 'No phone' }}</span>
+                  <span style="text-overflow: ellipsis; overflow: hidden; max-width: 160px;">{{ c.tenant.email }}</span>
                 </div>
               </td>
 
@@ -137,7 +144,7 @@
                   {{ c.description }}
                 </div>
                 {% if c.owner_response %}
-                  <div style="margin-top: 0.4rem; padding: 0.4rem 0.65rem; background: var(--bg-subtle); border-left: 3px solid var(--color-primary); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-main);">
+                  <div style="margin-top: 0.4rem; padding: 0.4rem 0.65rem; background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-main);">
                     <strong>Owner Note:</strong> {{ c.owner_response }}
                   </div>
                 {% endif %}
@@ -146,13 +153,13 @@
               <!-- Priority -->
               <td>
                 {% if c.priority == 'Urgent' %}
-                  <span class="status-pill danger" style="font-weight: 700;">🚨 Urgent</span>
+                  <span class="status-pill danger" style="font-weight: 700;">Urgent</span>
                 {% elif c.priority == 'High' %}
-                  <span class="status-pill danger" style="font-weight: 600;">🔥 High</span>
+                  <span class="status-pill danger" style="font-weight: 600;">High</span>
                 {% elif c.priority == 'Medium' %}
-                  <span class="status-pill warning" style="font-weight: 600;">⚡ Medium</span>
+                  <span class="status-pill warning" style="font-weight: 600;">Medium</span>
                 {% else %}
-                  <span class="status-pill info">🌱 Low</span>
+                  <span class="status-pill info">Low</span>
                 {% endif %}
               </td>
 
@@ -202,10 +209,12 @@
         {% else %}
           <tr id="empty-table-row">
             <td colspan="8" style="text-align: center; padding: 3.5rem 1.5rem;">
-              <div style="font-size: 2.75rem; margin-bottom: 0.75rem;">🎉</div>
+              <div style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--bg-subtle); color: var(--text-muted); margin-bottom: 0.75rem;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
               <div style="font-weight: 600; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.35rem;">Zero Complaints Registered</div>
               <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 420px; margin: 0 auto;">
-                No maintenance tickets or resident grievances found. Everything in your PG is running smoothly!
+                No maintenance tickets or resident grievances found. Everything in your PG is running smoothly.
               </p>
             </td>
           </tr>
@@ -217,7 +226,9 @@
 
 <!-- Dynamic Search / Filter Empty Message -->
 <div id="filter-no-results" style="display: none; text-align: center; padding: 3rem 1.5rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); margin-top: 1rem;">
-  <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+  <div style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-subtle); color: var(--text-muted); margin-bottom: 0.5rem;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+  </div>
   <div style="font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">No matching complaints found</div>
   <p style="color: var(--text-muted); font-size: 0.875rem;">Try modifying your search keywords or filter tab.</p>
 </div>

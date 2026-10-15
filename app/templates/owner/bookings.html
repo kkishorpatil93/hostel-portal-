@@ -5,13 +5,11 @@
 
 {% block content %}
 <!-- Page Header -->
+<!-- Page Header -->
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.65rem;">
-      <span>Booking Requests & Admissions</span>
-      <span class="status-pill {% if pending_bookings > 0 %}warning{% else %}success{% endif %}" style="font-size: 0.75rem;">
-        {% if pending_bookings > 0 %}{{ pending_bookings }} Awaiting Action{% else %}All Caught Up{% endif %}
-      </span>
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; letter-spacing: -0.02em;">
+      Booking Requests & Admissions
     </h1>
     <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
       Review applicant details, assign specific vacant beds, verify room availability, or reject applications.
@@ -27,37 +25,45 @@
 
 <!-- KPI Summary Counters -->
 <div class="kpi-grid" style="margin-bottom: 1.75rem;">
-  <div class="stat-card accent-primary" style="padding: 1rem 1.25rem;">
+  <div class="stat-card" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Total Applications</span>
-      <span class="stat-card-icon">📑</span>
+      <span class="stat-card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem;">{{ total_bookings }}</div>
     <div class="stat-card-meta"><span>All-time requests</span></div>
   </div>
 
-  <div class="stat-card accent-warning" style="padding: 1rem 1.25rem;">
+  <div class="stat-card" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Pending Review</span>
-      <span class="stat-card-icon">⏳</span>
+      <span class="stat-card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-warning);">{{ pending_bookings }}</div>
     <div class="stat-card-meta"><span>Require owner decision</span></div>
   </div>
 
-  <div class="stat-card accent-success" style="padding: 1rem 1.25rem;">
+  <div class="stat-card" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Approved & Allocated</span>
-      <span class="stat-card-icon">🛏️</span>
+      <span class="stat-card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-success);">{{ approved_bookings }}</div>
     <div class="stat-card-meta"><span>Active resident allocations</span></div>
   </div>
 
-  <div class="stat-card accent-danger" style="padding: 1rem 1.25rem;">
+  <div class="stat-card" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
-      <span class="stat-card-title">Rejected / Declined</span>
-      <span class="stat-card-icon">🚫</span>
+      <span class="stat-card-title">Declined</span>
+      <span class="stat-card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-danger);">{{ rejected_bookings }}</div>
     <div class="stat-card-meta"><span>Declined applications</span></div>
@@ -67,7 +73,9 @@
 <!-- Search & Status Filter Toolbar -->
 <div class="filter-toolbar">
   <div class="search-input-wrapper">
-    <span class="search-icon">🔍</span>
+    <span class="search-icon">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+    </span>
     <input type="text" id="booking-search-input" placeholder="Search by booking #, applicant name, phone, email, or room..." aria-label="Search bookings">
   </div>
 
@@ -111,8 +119,8 @@
               <td>
                 <div style="font-weight: 600; color: var(--text-main);">{{ b.tenant.full_name }}</div>
                 <div style="font-size: 0.775rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.2rem;">
-                  <span>📞 {{ b.tenant.phone or 'No phone' }}</span>
-                  <span style="text-overflow: ellipsis; overflow: hidden; max-width: 160px;">✉️ {{ b.tenant.email }}</span>
+                  <span>{{ b.tenant.phone or 'No phone' }}</span>
+                  <span style="text-overflow: ellipsis; overflow: hidden; max-width: 160px;">{{ b.tenant.email }}</span>
                 </div>
               </td>
 
@@ -134,7 +142,7 @@
                       </span>
                     {% else %}
                       <span class="status-pill danger" style="font-size: 0.75rem;">
-                        ⚠️ Room Full (0 Vacant)
+                        Room Full (0 Vacant)
                       </span>
                     {% endif %}
                   {% endif %}
@@ -186,7 +194,7 @@
                           {% endfor %}
                         </select>
                         <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.3rem 0.65rem; font-size: 0.775rem;">
-                          ✓ Approve
+                          Approve
                         </button>
                       {% else %}
                         <span class="status-pill danger" title="Double booking prevention active" style="font-size: 0.725rem;">
@@ -200,14 +208,14 @@
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <input type="text" name="rejection_reason" placeholder="Optional decline note..." class="form-control" style="font-size: 0.75rem; padding: 0.2rem 0.45rem; width: 140px; height: auto;">
                       <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="return confirm('Are you sure you want to decline booking #{{ b.id }}?');">
-                        ✗ Reject
+                        Reject
                       </button>
                     </form>
 
                   </div>
                 {% elif b.status == 'APPROVED' %}
                   <div style="font-size: 0.8rem; color: var(--color-success); font-weight: 500;">
-                    ✓ Bed Allocated
+                    Bed Allocated
                     {% if b.allocation %}
                       <div style="font-size: 0.75rem; color: var(--text-muted);">
                         Since {{ b.allocation.start_date|date_fmt }}
@@ -225,7 +233,9 @@
         {% else %}
           <tr id="empty-table-row">
             <td colspan="7" style="text-align: center; padding: 3.5rem 1.5rem;">
-              <div style="font-size: 2.75rem; margin-bottom: 0.75rem;">📭</div>
+              <div style="width: 44px; height: 44px; margin: 0 auto 0.75rem; border-radius: var(--radius-md); background: var(--bg-subtle); display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
+              </div>
               <div style="font-weight: 600; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.35rem;">Zero Booking Applications</div>
               <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 420px; margin: 0 auto;">
                 When prospective tenants apply for rooms online or schedule bookings, their requests will appear here for your approval.
@@ -240,7 +250,9 @@
 
 <!-- Dynamic Search / Filter Empty Message -->
 <div id="filter-no-results" style="display: none; text-align: center; padding: 3rem 1.5rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); margin-top: 1rem;">
-  <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+  <div style="width: 40px; height: 40px; margin: 0 auto 0.5rem; border-radius: var(--radius-md); background: var(--bg-subtle); display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+  </div>
   <div style="font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">No matching booking applications found</div>
   <p style="color: var(--text-muted); font-size: 0.875rem;">Try adjusting your search criteria or switching status tabs.</p>
 </div>

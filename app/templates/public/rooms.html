@@ -40,7 +40,7 @@
           </p>
           <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem;">
             {% for amenity in room.amenities %}
-              <span class="badge badge-neutral" style="font-size: 0.75rem;">✓ {{ amenity.name }}</span>
+              <span class="badge badge-neutral" style="font-size: 0.75rem;">{{ amenity.name }}</span>
             {% endfor %}
           </div>
         </div>

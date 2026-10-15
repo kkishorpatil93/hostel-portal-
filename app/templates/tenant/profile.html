@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}My Profile — Resident Portal{% endblock %}
+{% block title %}My Profile | Resident Portal{% endblock %}
 
 {% block content %}
 <section style="padding: 2.5rem 0;">
@@ -37,7 +37,7 @@
 
       <div class="form-group">
         <label class="form-label">Emergency Contact Name & Phone</label>
-        <input type="text" class="form-control" value="{{ user.tenant_profile.emergency_contact_name if user.tenant_profile and user.tenant_profile.emergency_contact_name else 'Not specified' }} — {{ user.tenant_profile.emergency_contact_phone if user.tenant_profile else '' }}" readonly>
+        <input type="text" class="form-control" value="{{ user.tenant_profile.emergency_contact_name if user.tenant_profile and user.tenant_profile.emergency_contact_name else 'Not specified' }}{% if user.tenant_profile and user.tenant_profile.emergency_contact_phone %} ({{ user.tenant_profile.emergency_contact_phone }}){% endif %}" readonly>
       </div>
 
       <div class="form-group">

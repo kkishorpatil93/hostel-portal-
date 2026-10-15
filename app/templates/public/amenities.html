@@ -15,7 +15,9 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
       {% for am in amenities %}
       <div class="card">
-        <div style="font-size: 2rem; margin-bottom: 0.75rem;">✨</div>
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--bg-subtle); color: var(--color-primary); margin-bottom: 0.85rem;" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
         <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem;">{{ am.name }}</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">{{ am.description or 'Maintained round-the-clock for all residents.' }}</p>
       </div>

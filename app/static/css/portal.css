@@ -124,16 +124,17 @@
 }
 
 .portal-user-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-neutral-900);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.875rem;
+  font-weight: 600;
+  font-size: 0.825rem;
+  letter-spacing: 0.5px;
 }
 
 .portal-user-info {
@@ -232,12 +233,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(2px);
+  background-color: rgba(15, 23, 42, 0.6);
   z-index: 1040;
 }
 
-/* Modern KPI / Stat Cards */
+/* Modern KPI / Stat Cards - Clean, bespoke metrics */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -253,29 +253,13 @@
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-xs);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
+  border-color: var(--color-neutral-400);
   box-shadow: var(--shadow-sm);
 }
-
-.stat-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--stat-accent, var(--color-primary));
-}
-
-.stat-card.accent-primary::before { --stat-accent: var(--color-primary); }
-.stat-card.accent-success::before { --stat-accent: var(--color-success); }
-.stat-card.accent-warning::before { --stat-accent: var(--color-warning); }
-.stat-card.accent-danger::before { --stat-accent: var(--color-danger); }
-.stat-card.accent-info::before { --stat-accent: var(--color-info); }
 
 .stat-card-header {
   display: flex;
@@ -285,28 +269,52 @@
 }
 
 .stat-card-title {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--text-muted);
 }
 
 .stat-card-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
   background-color: var(--bg-subtle);
+  color: var(--text-muted);
+}
+
+.stat-card-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
 }
 
 .stat-card-value {
   font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
+  font-weight: 700;
   color: var(--text-main);
   line-height: var(--line-height-tight);
   margin-bottom: 0.35rem;
+  letter-spacing: -0.02em;
 }
 
 .stat-card-meta {
@@ -320,7 +328,7 @@
 /* Progress bar inside card */
 .kpi-progress {
   width: 100%;
-  height: 6px;
+  height: 4px;
   background-color: var(--color-neutral-200);
   border-radius: var(--radius-full);
   margin-top: 0.5rem;
@@ -331,7 +339,7 @@
   height: 100%;
   border-radius: var(--radius-full);
   background-color: var(--color-primary);
-  transition: width 0.5s ease-in-out;
+  transition: width 0.3s ease;
 }
 
 .kpi-progress-bar.success { background-color: var(--color-success); }
@@ -466,9 +474,8 @@
 }
 
 .stat-card-link:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary);
+  border-color: var(--color-neutral-400);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Details Page Filters & Search */

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Tenant Directory — Owner Portal{% endblock %}
+{% block title %}Tenant Directory | Owner Portal{% endblock %}
 
 {% block content %}
 <section style="padding: 2.5rem 0;">
@@ -33,12 +33,12 @@
               {{ t.email }}<br>
               <span style="font-size: 0.8rem; color: var(--text-muted);">+91 {{ t.phone }}</span>
             </td>
-            <td>{{ t.tenant_profile.occupation if t.tenant_profile and t.tenant_profile.occupation else '—' }}</td>
+            <td>{{ t.tenant_profile.occupation if t.tenant_profile and t.tenant_profile.occupation else '-' }}</td>
             <td>
               {% if t.tenant_profile and t.tenant_profile.emergency_contact_name %}
                 {{ t.tenant_profile.emergency_contact_name }} ({{ t.tenant_profile.emergency_contact_phone }})
               {% else %}
-                —
+                -
               {% endif %}
             </td>
             <td>

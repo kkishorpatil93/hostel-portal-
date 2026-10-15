@@ -5,13 +5,11 @@
 
 {% block content %}
 <!-- Page Header -->
+<!-- Page Header -->
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.65rem;">
-      <span>Rent Accounts & Pending Payments</span>
-      <span class="status-pill {% if outstanding_rent > 0 %}danger{% else %}success{% endif %}" style="font-size: 0.75rem;">
-        {% if outstanding_rent > 0 %}{{ currency_symbol }}{{ outstanding_rent|inr }} Outstanding{% else %}All Settled{% endif %}
-      </span>
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; letter-spacing: -0.02em;">
+      Rent Accounts & Pending Payments
     </h1>
     <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
       Real-time billing ledgers, payment tracking, overdue monitoring, and offline payment recording.
@@ -27,28 +25,34 @@
 
 <!-- KPI Summary Counters -->
 <div class="kpi-grid" style="margin-bottom: 1.75rem;">
-  <div class="stat-card accent-primary" style="padding: 1rem 1.25rem;">
+  <div class="stat-card" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Total Invoiced</span>
-      <span class="stat-card-icon">📄</span>
+      <span class="stat-card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem;">{{ currency_symbol }}{{ total_invoiced|inr }}</div>
     <div class="stat-card-meta"><span>Cumulative monthly billing</span></div>
   </div>
 
-  <div class="stat-card accent-success" style="padding: 1rem 1.25rem;">
+  <div class="stat-card" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Rent Collected</span>
-      <span class="stat-card-icon">💰</span>
+      <span class="stat-card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-success);">{{ currency_symbol }}{{ rent_collected|inr }}</div>
-    <div class="stat-card-meta"><span>Verified payment inflow</span></div>
+    <div class="stat-card-meta"><span>Total collected payments</span></div>
   </div>
 
-  <div class="stat-card {% if outstanding_rent > 0 %}accent-danger{% else %}accent-success{% endif %}" style="padding: 1rem 1.25rem;">
+  <div class="stat-card" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Outstanding Rent</span>
-      <span class="stat-card-icon">⏳</span>
+      <span class="stat-card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem; color: {% if outstanding_rent > 0 %}var(--color-danger){% else %}var(--color-success){% endif %};">
       {{ currency_symbol }}{{ outstanding_rent|inr }}
@@ -58,10 +62,12 @@
     </div>
   </div>
 
-  <div class="stat-card accent-warning" style="padding: 1rem 1.25rem;">
+  <div class="stat-card" style="padding: 1rem 1.25rem;">
     <div class="stat-card-header" style="margin-bottom: 0.4rem;">
       <span class="stat-card-title">Overdue Accounts</span>
-      <span class="stat-card-icon">⚠️</span>
+      <span class="stat-card-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+      </span>
     </div>
     <div class="stat-card-value" style="font-size: 1.75rem; color: var(--color-warning);">{{ overdue_count }}</div>
     <div class="stat-card-meta"><span>Past payment due date</span></div>
@@ -71,7 +77,9 @@
 <!-- Search & Status Filter Toolbar -->
 <div class="filter-toolbar">
   <div class="search-input-wrapper">
-    <span class="search-icon">🔍</span>
+    <span class="search-icon">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+    </span>
     <input type="text" id="rent-search-input" placeholder="Search by tenant name, phone, room, or month (e.g. October 2026)..." aria-label="Search rent records">
   </div>
 
@@ -87,7 +95,6 @@
 <div class="portal-card" style="padding: 0; overflow: hidden; margin-bottom: 2rem;">
   <div class="portal-card-header" style="padding: 1.25rem 1.5rem; margin-bottom: 0; border-bottom: 1px solid var(--border-color);">
     <div class="portal-card-title">
-      <span>📋</span>
       <span>Monthly Billing Ledger</span>
     </div>
     <span style="font-size: 0.8rem; color: var(--text-muted);">Calculated from live transactions and rent charges</span>
@@ -126,8 +133,8 @@
               <td>
                 <div style="font-weight: 600; color: var(--text-main);">{{ chg.tenant.full_name }}</div>
                 <div style="font-size: 0.775rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.2rem;">
-                  <span>📞 {{ chg.tenant.phone or 'No phone' }}</span>
-                  <span style="text-overflow: ellipsis; overflow: hidden; max-width: 160px;">✉️ {{ chg.tenant.email }}</span>
+                  <span>{{ chg.tenant.phone or 'No phone' }}</span>
+                  <span style="text-overflow: ellipsis; overflow: hidden; max-width: 160px;">{{ chg.tenant.email }}</span>
                 </div>
               </td>
 
@@ -194,11 +201,11 @@
                           data-balance="{{ chg.outstanding_balance }}"
                           data-month="{{ chg.billing_month.strftime('%B %Y') }}"
                           style="padding: 0.35rem 0.75rem; font-size: 0.775rem;">
-                    💵 Record Payment
+                    Record Payment
                   </button>
                 {% else %}
                   <span style="color: var(--color-success); font-size: 0.8rem; font-weight: 500;">
-                    ✓ Zero Balance
+                    Settled
                   </span>
                 {% endif %}
               </td>
@@ -207,7 +214,9 @@
         {% else %}
           <tr id="empty-table-row">
             <td colspan="9" style="text-align: center; padding: 3.5rem 1.5rem;">
-              <div style="font-size: 2.75rem; margin-bottom: 0.75rem;">💳</div>
+              <div style="width: 44px; height: 44px; margin: 0 auto 0.75rem; border-radius: var(--radius-md); background: var(--bg-subtle); display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+              </div>
               <div style="font-weight: 600; font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.35rem;">Zero Billing Records Generated</div>
               <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 420px; margin: 0 auto;">
                 When monthly rent charges are generated for active tenant allocations, they will appear in this ledger with instant payment recording options.
@@ -222,7 +231,9 @@
 
 <!-- Dynamic Search / Filter Empty Message -->
 <div id="filter-no-results" style="display: none; text-align: center; padding: 3rem 1.5rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); margin-top: 1rem; margin-bottom: 2rem;">
-  <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+  <div style="width: 40px; height: 40px; margin: 0 auto 0.5rem; border-radius: var(--radius-md); background: var(--bg-subtle); display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+  </div>
   <div style="font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">No matching rent records found</div>
   <p style="color: var(--text-muted); font-size: 0.875rem;">Try modifying your search criteria or selecting another filter pill.</p>
 </div>
@@ -231,8 +242,7 @@
 <div class="portal-card" style="padding: 0; overflow: hidden;">
   <div class="portal-card-header" style="padding: 1.25rem 1.5rem; margin-bottom: 0; border-bottom: 1px solid var(--border-color);">
     <div class="portal-card-title">
-      <span>🧾</span>
-      <span>Recent Verified Payment Receipts</span>
+      <span>Payment Receipts</span>
     </div>
     <span style="font-size: 0.8rem; color: var(--text-muted);">Real-time payment transaction log</span>
   </div>
@@ -290,11 +300,10 @@
 </div>
 
 <!-- Record Payment Modal -->
-<div id="payment-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center;">
+<div id="payment-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); z-index: 2000; align-items: center; justify-content: center;">
   <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); width: 100%; max-width: 480px; margin: 1rem; box-shadow: var(--shadow-xl); overflow: hidden;">
     <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
       <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
-        <span>💵</span>
         <span>Record Tenant Payment</span>
       </h3>
       <button type="button" id="close-modal-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; line-height: 1;">&times;</button>

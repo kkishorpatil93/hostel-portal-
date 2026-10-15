@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Notice Board — Resident Portal{% endblock %}
+{% block title %}Notice Board | Resident Portal{% endblock %}
 
 {% block content %}
 <section style="padding: 2.5rem 0;">
@@ -18,7 +18,7 @@
       <div class="card">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
           <span class="badge {{ 'badge-warning' if n.pinned else 'badge-neutral' }}">
-            {{ '📌 Pinned Notice' if n.pinned else 'General Notice' }}
+            {{ 'Pinned' if n.pinned else 'Notice' }}
           </span>
           <span style="font-size: 0.75rem; color: var(--text-muted);">{{ n.created_at|date_fmt }}</span>
         </div>

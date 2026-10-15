@@ -4,15 +4,14 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero-section" style="padding: 4rem 0; background: linear-gradient(135deg, var(--bg-surface), var(--bg-subtle)); border-bottom: 1px solid var(--border-color);">
+<section class="hero-section" style="padding: 4.5rem 0 4rem; background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color);">
   <div class="container" style="display: grid; grid-template-columns: 1fr; gap: 2rem; align-items: center;">
     <div>
-      <span class="badge badge-info" style="margin-bottom: 1rem;">✨ Modern Living in Bengaluru</span>
-      <h1 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; color: var(--color-primary); line-height: 1.2; margin-bottom: 1rem;">
-        Your Comfortable Home Away From Home
+      <h1 style="font-size: clamp(2.25rem, 4.5vw, 3.25rem); font-weight: 700; color: var(--color-primary); line-height: 1.2; margin-bottom: 1.25rem; letter-spacing: -0.02em;">
+        Comfortable, Secure PG Living in Bengaluru
       </h1>
-      <p style="font-size: 1.125rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 600px;">
-        Designed for ambitious students and tech professionals. Fully furnished rooms, hygienic 3-time meals, high-speed Wi-Fi, and 24/7 security in prime Koramangala.
+      <p style="font-size: 1.125rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 620px; line-height: 1.6;">
+        Designed for students and working professionals. Fully furnished rooms, hygienic 3-time meals, high-speed Wi-Fi, and 24/7 security in prime Koramangala.
       </p>
       <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
         <a href="{{ url_for('public.rooms') }}" class="btn btn-primary btn-lg">Browse Available Rooms</a>
@@ -46,7 +45,7 @@
             {% endif %}
           </div>
           <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">
-            Room {{ room.room_number }} — {{ room.room_type }}
+            Room {{ room.room_number }} · {{ room.room_type }}
           </h3>
           <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
             {{ room.description or 'Spacious, well-ventilated accommodation with attached facilities.' }}
@@ -54,7 +53,10 @@
 
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
             {% for amenity in room.amenities %}
-              <span class="badge badge-neutral" style="font-size: 0.75rem;">✓ {{ amenity.name }}</span>
+              <span class="badge badge-neutral" style="font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>{{ amenity.name }}</span>
+              </span>
             {% endfor %}
           </div>
         </div>
@@ -91,7 +93,9 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem;">
       {% for am in amenities %}
       <div class="card" style="background-color: var(--bg-body);">
-        <div style="font-size: 1.75rem; margin-bottom: 0.75rem;">🌟</div>
+        <div style="width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
         <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">{{ am.name }}</h3>
         <p style="color: var(--text-muted); font-size: 0.85rem;">{{ am.description or 'Provided across all rooms.' }}</p>
       </div>
@@ -114,14 +118,19 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
       {% for rev in reviews %}
       <div class="card">
-        <div style="color: #f59e0b; margin-bottom: 0.75rem;">
-          {{ '★' * rev.rating }}{{ '☆' * (5 - rev.rating) }}
+        <div style="display: flex; gap: 3px; color: #d97706; margin-bottom: 0.75rem;" aria-label="{{ rev.rating }} out of 5 stars">
+          {% for _ in range(rev.rating) %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          {% endfor %}
+          {% for _ in range(5 - rev.rating) %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          {% endfor %}
         </div>
-        <p style="font-style: italic; color: var(--text-main); margin-bottom: 1rem; font-size: 0.95rem;">
+        <p style="color: var(--text-main); margin-bottom: 1rem; font-size: 0.95rem;">
           "{{ rev.comment }}"
         </p>
         <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
-          — Verified Resident
+          Verified Resident
         </div>
       </div>
       {% endfor %}
