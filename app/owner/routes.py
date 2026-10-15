@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from flask import render_template
+from flask import redirect, render_template, url_for
 from sqlalchemy import func
 
 from app.auth.decorators import owner_required
@@ -66,8 +66,47 @@ def dashboard():
 @owner_bp.route("/rooms")
 @owner_required
 def rooms():
-    rooms_list = Room.query.all()
-    return render_template("owner/rooms.html", rooms=rooms_list)
+    total_rooms = Room.query.filter_by(is_active=True).count()
+    total_beds = Bed.query.join(Room).filter(Room.is_active == True, Bed.is_active == True).count()
+    occupied_beds = (
+        Allocation.query.join(Bed)
+        .join(Room)
+        .filter(
+            Room.is_active == True,
+            Allocation.status.in_([AllocationStatus.ACTIVE, AllocationStatus.NOTICE_SERVED]),
+        )
+        .count()
+    )
+    vacant_beds = max(0, total_beds - occupied_beds)
+    rooms_list = Room.query.filter_by(is_active=True).order_by(Room.room_number).all()
+
+    return render_template(
+        "owner/rooms.html",
+        rooms=rooms_list,
+        total_rooms=total_rooms,
+        total_beds=total_beds,
+        occupied_beds=occupied_beds,
+        vacant_beds=vacant_beds,
+        currency_symbol="₹",
+    )
+
+
+@owner_bp.route("/occupancy-report")
+@owner_required
+def occupancy_report():
+    return redirect(url_for("owner.rooms"))
+
+
+@owner_bp.route("/rent-collections")
+@owner_required
+def rent_collections():
+    return redirect(url_for("owner.rent"))
+
+
+@owner_bp.route("/pending-payments")
+@owner_required
+def pending_payments():
+    return redirect(url_for("owner.rent"))
 
 
 @owner_bp.route("/bookings")

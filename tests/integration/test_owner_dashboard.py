@@ -115,3 +115,63 @@ def test_owner_dashboard_with_payments_and_bookings(client):
     assert "High-speed Wi-Fi disconnects frequently" in html
     assert "Room 102" in html
 
+
+def test_owner_dashboard_summary_cards_are_clickable(client):
+    """Every summary KPI card on the dashboard must be clickable and link to its details page."""
+    res = client.get("/owner/dashboard")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+
+    # 1. Bed Occupancy -> /owner/rooms
+    assert 'href="/owner/rooms"' in html
+    # 2. Occupancy Rate -> /owner/occupancy-report
+    assert 'href="/owner/occupancy-report"' in html
+    # 3. Rent Collected -> /owner/rent-collections
+    assert 'href="/owner/rent-collections"' in html
+    # 4. Outstanding Rent -> /owner/pending-payments
+    assert 'href="/owner/pending-payments"' in html
+    # 5. Pending Bookings -> /owner/bookings
+    assert 'href="/owner/bookings"' in html
+    # 6. Open Complaints -> /owner/complaints
+    assert 'href="/owner/complaints"' in html
+
+
+def test_rooms_and_beds_details_page(client):
+    """Rooms & Beds details page should display room number, sharing type, beds, tenant info, and filters."""
+    res = client.get("/owner/rooms")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+
+    # Navigation & Title
+    assert "Rooms & Beds Details" in html
+    assert "Back to Dashboard" in html
+    assert 'href="/owner/dashboard"' in html
+
+    # Top summary metrics consistent with dashboard (4 rooms, 8 beds, 1 occupied, 7 vacant)
+    assert "Total Active Rooms" in html
+    assert "Total Bed Capacity" in html
+    assert "Occupied Beds" in html
+    assert "Vacant Beds" in html
+
+    # Room items & sharing types
+    assert "Room 101" in html
+    assert "Single Private Room" in html
+    assert "Room 102" in html
+    assert "Double Sharing Room" in html
+
+    # Tenant Details on Bed A in Room 101
+    assert "Arjun Sharma (Demo Tenant)" in html
+    assert "9876511111" in html
+    assert "arjun.sharma@example.com" in html
+
+    # Vacant bed indicator
+    assert "Ready for new booking" in html
+
+    # Search & status filter toolbar
+    assert "room-search-input" in html
+    assert "All Rooms" in html
+    assert "Vacant" in html
+    assert "Partially Occupied" in html
+    assert "Fully Occupied" in html
+
+

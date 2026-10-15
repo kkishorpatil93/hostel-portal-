@@ -105,6 +105,22 @@ class Room(db.Model):
             ).count()
         )
 
+    @property
+    def occupied_beds(self) -> int:
+        return max(0, self.total_beds - self.available_beds)
+
+    @property
+    def vacant_beds(self) -> int:
+        return self.available_beds
+
+    @property
+    def occupancy_status(self) -> str:
+        if self.available_beds == 0:
+            return "Fully Occupied"
+        if self.available_beds == self.total_beds:
+            return "Vacant"
+        return "Partially Occupied"
+
     def __repr__(self):
         return f"<Room {self.room_number} ({self.room_type})>"
 
@@ -127,14 +143,15 @@ class Bed(db.Model):
     allocations = db.relationship("Allocation", backref="bed", lazy="dynamic")
 
     @property
-    def is_occupied(self) -> bool:
+    def current_allocation(self):
         from app.models.booking import Allocation, AllocationStatus
-        return (
-            self.allocations.filter(
-                Allocation.status.in_([AllocationStatus.ACTIVE, AllocationStatus.NOTICE_SERVED])
-            ).first()
-            is not None
-        )
+        return self.allocations.filter(
+            Allocation.status.in_([AllocationStatus.ACTIVE, AllocationStatus.NOTICE_SERVED])
+        ).first()
+
+    @property
+    def is_occupied(self) -> bool:
+        return self.current_allocation is not None
 
     def __repr__(self):
         return f"<Bed {self.bed_label} in Room ID {self.room_id}>"
