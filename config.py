@@ -73,6 +73,11 @@ class Config:
                 "postgresql://", "postgresql+psycopg2://", 1
             )
 
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 280,
+    }
+
     # Session Management
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     SESSION_COOKIE_HTTPONLY = True
