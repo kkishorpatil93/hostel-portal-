@@ -87,37 +87,27 @@ class Room(db.Model):
 
     @property
     def total_beds(self) -> int:
-        return self.beds.filter_by(is_active=True).count()
-
-    @property
-    def available_beds(self) -> int:
-        from sqlalchemy import select
-
-        from app.models.booking import Allocation, AllocationStatus
-        allocated_bed_ids = (
-            select(Allocation.bed_id)
-            .filter(Allocation.status.in_([AllocationStatus.ACTIVE, AllocationStatus.NOTICE_SERVED]))
-        )
-        return (
-            self.beds.filter(
-                Bed.is_active == True,
-                ~Bed.id.in_(allocated_bed_ids)
-            ).count()
-        )
-
-    @property
-    def occupied_beds(self) -> int:
-        return max(0, self.total_beds - self.available_beds)
+        return len([b for b in self.beds if b.is_active])
 
     @property
     def vacant_beds(self) -> int:
-        return self.available_beds
+        return len([b for b in self.beds if b.is_active and b.current_allocation is None])
+
+    @property
+    def occupied_beds(self) -> int:
+        return len([b for b in self.beds if b.is_active and b.current_allocation is not None])
+
+    @property
+    def available_beds(self) -> int:
+        return self.vacant_beds
 
     @property
     def occupancy_status(self) -> str:
-        if self.available_beds == 0:
+        tot = self.total_beds
+        vac = self.vacant_beds
+        if tot == 0 or vac == 0:
             return "Fully Occupied"
-        if self.available_beds == self.total_beds:
+        if vac == tot:
             return "Vacant"
         return "Partially Occupied"
 
