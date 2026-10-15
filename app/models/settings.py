@@ -18,9 +18,12 @@ class SiteSetting(db.Model):
 
     @classmethod
     def get_value(cls, key: str, default: str = "") -> str:
-        setting = cls.query.filter_by(key=key).first()
-        if setting and setting.value is not None:
-            return setting.value
+        try:
+            setting = cls.query.filter_by(key=key).first()
+            if setting and setting.value is not None:
+                return setting.value
+        except Exception:  # noqa: BLE001
+            return default
         return default
 
     @classmethod

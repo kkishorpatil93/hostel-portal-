@@ -8,7 +8,7 @@
   ],
   "functions": {
     "api/index.py": {
-      "includeFiles": "app/**",
+      "includeFiles": "{config.py,app/**}",
       "maxDuration": 15
     }
   }
