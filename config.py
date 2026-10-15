@@ -49,11 +49,16 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", DEFAULT_DB_PATH)
 
-    # Fix for Postgres URLs starting with postgres:// (e.g. Render / Heroku / Vercel Postgres)
-    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
-        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
-            "postgres://", "postgresql+psycopg2://", 1
-        )
+    # Fix for Postgres URLs (e.g. Supabase, Render, Heroku)
+    if SQLALCHEMY_DATABASE_URI:
+        if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+            SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
+                "postgres://", "postgresql+psycopg2://", 1
+            )
+        elif SQLALCHEMY_DATABASE_URI.startswith("postgresql://") and not SQLALCHEMY_DATABASE_URI.startswith("postgresql+"):
+            SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
+                "postgresql://", "postgresql+psycopg2://", 1
+            )
 
     # Session Management
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)

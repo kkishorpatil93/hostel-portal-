@@ -8,6 +8,7 @@ Flask-SQLAlchemy>=3.1.1
 SQLAlchemy>=2.0.27
 Flask-Migrate>=4.0.7
 Alembic>=1.13.1
+psycopg2-binary>=2.9.9
 
 # Authentication & Security
 Flask-Login>=0.6.3
