@@ -36,7 +36,17 @@
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
 
-        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-primary btn-sm">Owner Portal</a>
+        {% if current_user.is_authenticated %}
+          {% if current_user.is_owner %}
+            <a href="{{ url_for('owner.dashboard') }}" class="btn btn-primary btn-sm">Owner Portal</a>
+          {% elif current_user.is_tenant %}
+            <a href="{{ url_for('tenant.dashboard') }}" class="btn btn-primary btn-sm">Resident Portal</a>
+          {% endif %}
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary btn-sm" title="Sign Out">Sign Out</a>
+        {% else %}
+          <a href="{{ url_for('auth.resident_login') }}" class="btn btn-outline-primary btn-sm">Resident Sign In</a>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm">Owner Portal</a>
+        {% endif %}
 
         <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open navigation menu">
           <span></span><span></span><span></span>

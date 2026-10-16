@@ -16,20 +16,27 @@ from app.models.property import Room
 from app.models.user import User
 
 
-def test_owner_dashboard_direct_access_without_login(client):
-    """Owner dashboard should be directly accessible without requiring a login barrier."""
+def test_owner_dashboard_unauthenticated_redirects_to_login(client):
+    """Unauthenticated access to Owner dashboard must redirect to login."""
     response = client.get("/owner/dashboard")
+    assert response.status_code == 302
+    assert "/auth/login" in response.headers["Location"]
+
+
+def test_owner_dashboard_forbidden_for_tenant(authenticated_tenant_client):
+    """Authenticated tenant must receive 403 Forbidden when attempting to access owner dashboard."""
+    response = authenticated_tenant_client.get("/owner/dashboard")
+    assert response.status_code == 403
+
+
+def test_auth_login_renders_login_form(client):
+    """Accessing /auth/login while logged out renders the sign in form."""
+    response = client.get("/auth/login")
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert "Overview & Operations" in html
-    assert "Bed Occupancy" in html
-
-
-def test_auth_login_redirects_directly_to_dashboard(client):
-    """Accessing /auth/login should seamlessly redirect straight to the owner dashboard."""
-    response = client.get("/auth/login")
-    assert response.status_code == 302
-    assert "/owner/dashboard" in response.headers["Location"]
+    assert "Sign In" in html
+    assert 'name="email"' in html
+    assert 'name="password"' in html
 
 
 def test_owner_dashboard_renders_live_metrics(client):
@@ -116,9 +123,9 @@ def test_owner_dashboard_with_payments_and_bookings(client):
     assert "Room 102" in html
 
 
-def test_owner_dashboard_summary_cards_are_clickable(client):
+def test_owner_dashboard_summary_cards_are_clickable(authenticated_owner_client):
     """Every summary KPI card on the dashboard must be clickable and link to its details page."""
-    res = client.get("/owner/dashboard")
+    res = authenticated_owner_client.get("/owner/dashboard")
     assert res.status_code == 200
     html = res.get_data(as_text=True)
 
@@ -136,9 +143,9 @@ def test_owner_dashboard_summary_cards_are_clickable(client):
     assert 'href="/owner/complaints"' in html
 
 
-def test_rooms_and_beds_details_page(client):
+def test_rooms_and_beds_details_page(authenticated_owner_client):
     """Rooms & Beds details page should display room number, sharing type, beds, tenant info, and filters."""
-    res = client.get("/owner/rooms")
+    res = authenticated_owner_client.get("/owner/rooms")
     assert res.status_code == 200
     html = res.get_data(as_text=True)
 
@@ -175,7 +182,7 @@ def test_rooms_and_beds_details_page(client):
     assert "Fully Occupied" in html
 
 
-def test_complaints_details_page_and_status_update(client):
+def test_complaints_details_page_and_status_update(authenticated_owner_client):
     """Complaints page should render tickets and allow updating ticket status with notes."""
     tenant = User.query.filter_by(email="arjun.sharma@example.com").first()
     room_101 = Room.query.filter_by(room_number="101").first()
@@ -193,7 +200,7 @@ def test_complaints_details_page_and_status_update(client):
     db.session.commit()
 
     # GET /owner/complaints
-    res = client.get("/owner/complaints")
+    res = authenticated_owner_client.get("/owner/complaints")
     assert res.status_code == 200
     html = res.get_data(as_text=True)
     assert "Maintenance" in html
@@ -203,7 +210,7 @@ def test_complaints_details_page_and_status_update(client):
     assert "High" in html
 
     # POST /owner/complaints/<id>/status
-    post_res = client.post(
+    post_res = authenticated_owner_client.post(
         f"/owner/complaints/{complaint.id}/status",
         data={"status": "IN_PROGRESS", "owner_response": "Technician scheduled for 4 PM"},
         follow_redirects=True,
@@ -219,7 +226,7 @@ def test_complaints_details_page_and_status_update(client):
     assert updated_complaint.owner_response == "Technician scheduled for 4 PM"
 
 
-def test_bookings_details_page_approve_and_double_booking_prevention(client):
+def test_bookings_details_page_approve_and_double_booking_prevention(authenticated_owner_client):
     """Approving a booking allocates a bed, and prevents double-booking if no beds are vacant."""
     tenant = User.query.filter_by(email="arjun.sharma@example.com").first()
     room_101 = Room.query.filter_by(room_number="101").first()
@@ -243,7 +250,7 @@ def test_bookings_details_page_approve_and_double_booking_prevention(client):
     db.session.commit()
 
     # GET /owner/bookings
-    res = client.get("/owner/bookings")
+    res = authenticated_owner_client.get("/owner/bookings")
     assert res.status_code == 200
     html = res.get_data(as_text=True)
     assert "Booking Requests" in html
@@ -251,7 +258,7 @@ def test_bookings_details_page_approve_and_double_booking_prevention(client):
     assert "Room 102" in html
 
     # 1. Test Double-Booking Prevention: Attempt to approve booking for Room 101 (0 vacant beds)
-    res_full = client.post(
+    res_full = authenticated_owner_client.post(
         f"/owner/bookings/{booking_full_room.id}/approve",
         data={},
         follow_redirects=True,
@@ -262,7 +269,7 @@ def test_bookings_details_page_approve_and_double_booking_prevention(client):
     assert Booking.query.get(booking_full_room.id).status == BookingStatus.PENDING
 
     # 2. Test Successful Approval: Approve booking for Room 102 (vacant beds available)
-    res_vacant = client.post(
+    res_vacant = authenticated_owner_client.post(
         f"/owner/bookings/{booking_vacant_room.id}/approve",
         data={"owner_notes": "Welcome to StayNest"},
         follow_redirects=True,
@@ -275,7 +282,7 @@ def test_bookings_details_page_approve_and_double_booking_prevention(client):
     assert approved_booking.allocation is not None
 
 
-def test_bookings_details_page_reject(client):
+def test_bookings_details_page_reject(authenticated_owner_client):
     """Owner can decline or reject a booking with a rejection reason."""
     tenant = User.query.filter_by(email="arjun.sharma@example.com").first()
     room_102 = Room.query.filter_by(room_number="102").first()
@@ -289,7 +296,7 @@ def test_bookings_details_page_reject(client):
     db.session.add(booking)
     db.session.commit()
 
-    res = client.post(
+    res = authenticated_owner_client.post(
         f"/owner/bookings/{booking.id}/reject",
         data={"rejection_reason": "Requested dates conflict with maintenance schedule"},
         follow_redirects=True,
@@ -301,13 +308,13 @@ def test_bookings_details_page_reject(client):
     assert updated_b.rejection_reason == "Requested dates conflict with maintenance schedule"
 
 
-def test_pending_rent_details_page_and_record_payment(client):
+def test_pending_rent_details_page_and_record_payment(authenticated_owner_client):
     """Pending rent page should calculate remaining balance and allow recording offline payments."""
     charge = RentCharge.query.first()
     initial_outstanding = charge.outstanding_balance
 
     # GET /owner/pending-payments and /owner/rent
-    res = client.get("/owner/pending-payments")
+    res = authenticated_owner_client.get("/owner/pending-payments")
     assert res.status_code == 200
     html = res.get_data(as_text=True)
     assert "Rent Accounts" in html
@@ -315,7 +322,7 @@ def test_pending_rent_details_page_and_record_payment(client):
     assert "Remaining Balance" in html
 
     # Record a partial payment of ₹5,000.00
-    pay_res = client.post(
+    pay_res = authenticated_owner_client.post(
         f"/owner/rent/{charge.id}/pay",
         data={
             "amount": "5000.00",
@@ -337,9 +344,9 @@ def test_pending_rent_details_page_and_record_payment(client):
     assert charge.status == "PARTIAL"
 
 
-def test_occupancy_report_details_page(client):
+def test_occupancy_report_details_page(authenticated_owner_client):
     """Occupancy report page should render formula, overall occupancy %, and room-wise breakdown."""
-    res = client.get("/owner/occupancy-report")
+    res = authenticated_owner_client.get("/owner/occupancy-report")
     assert res.status_code == 200
     html = res.get_data(as_text=True)
 

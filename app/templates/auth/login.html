@@ -1,44 +1,58 @@
 {% extends "base.html" %}
 
-{% block title %}Sign In to StayNest PG{% endblock %}
+{% block title %}Owner & Staff Sign In | StayNest PG{% endblock %}
 
 {% block content %}
 <section style="padding: 4rem 0;">
-  <div class="container" style="max-width: 450px;">
-    <div class="card">
+  <div class="container" style="max-width: 460px;">
+    <div class="card" style="box-shadow: var(--shadow-lg); border: 1px solid var(--border-color);">
       <div style="text-align: center; margin-bottom: 2rem;">
-        <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem;">Welcome Back</h1>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Sign in to your PG resident or owner portal.</p>
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background-color: var(--color-primary-light, #eff6ff); color: var(--color-primary); margin-bottom: 1rem;">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; letter-spacing: -0.02em;">Owner & Staff Sign In</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Sign in to access property management, occupancy, and rent ledgers.</p>
       </div>
 
-      <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+      <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" id="login-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="form-group">
-          <label class="form-label" for="email">Email Address</label>
-          <input type="email" id="email" name="email" class="form-control" placeholder="name@example.com" required autofocus>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" for="email" style="font-weight: 600;">Email Address</label>
+          <input type="email" id="email" name="email" class="form-control" placeholder="owner@staynest.local" required autofocus>
         </div>
 
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
-            <label class="form-label" for="password" style="margin-bottom: 0;">Password</label>
-            <a href="{{ url_for('auth.forgot_password') }}" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none;">Forgot password?</a>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label class="form-label" for="password" style="margin-bottom: 0; font-weight: 600;">Password</label>
+            <a href="{{ url_for('auth.forgot_password') }}" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none; font-weight: 500;">Forgot password?</a>
           </div>
-          <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+          <div style="position: relative;">
+            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required style="padding-right: 2.75rem;">
+            <button type="button" id="toggle-password" onclick="togglePasswordVisibility('password', this)" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0.25rem; display: flex; align-items: center;" aria-label="Toggle password visibility">
+              <svg id="eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
 
-        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-          <input type="checkbox" id="remember" name="remember" style="accent-color: var(--color-primary);">
-          <label for="remember" style="font-size: 0.875rem; color: var(--text-muted); cursor: pointer;">Remember this device</label>
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="remember" name="remember" style="accent-color: var(--color-primary); width: 16px; height: 16px;">
+            <label for="remember" style="font-size: 0.875rem; color: var(--text-muted); cursor: pointer; margin-bottom: 0;">Remember this device</label>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 0.5rem;">
-          Sign In
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-lg" style="width: 100%;">
+          <span id="btn-text">Sign In</span>
         </button>
       </form>
 
-      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 1rem;">
-        Looking for a room? <a href="{{ url_for('auth.register') }}" style="color: var(--color-primary); font-weight: 600; text-decoration: none;">Register as Tenant</a>
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+        Are you a current resident?
+        <a href="{{ url_for('auth.resident_login') }}" style="color: var(--color-primary); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.25rem;">
+          <span>Resident Portal Sign In</span>
+          <span>&rarr;</span>
+        </a>
       </div>
 
       <!-- Quick Demo Sign-In Box -->
@@ -46,7 +60,7 @@
         <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: space-between;">
           <span style="display: inline-flex; align-items: center; gap: 0.4rem;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-1.5 1.5L16 7l-2-2m-1.5 1.5L11 8l-2-2m-1.5 1.5L6 9l-4 4v7h7l4-4"/></svg>
-            <span>Demo Credentials</span>
+            <span>Verified Demo Credentials</span>
           </span>
           <span class="status-pill info" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">1-Click</span>
         </div>
@@ -71,6 +85,18 @@
 
 {% block extra_scripts %}
 <script>
+  function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+    } else {
+      input.type = 'password';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    }
+  }
+
   function fillDemo(email, password) {
     var emailInput = document.getElementById('email');
     var passInput = document.getElementById('password');
@@ -80,5 +106,15 @@
       emailInput.focus();
     }
   }
+
+  // Loading state on form submit
+  document.getElementById('login-form').addEventListener('submit', function() {
+    var btn = document.getElementById('submit-btn');
+    var btnText = document.getElementById('btn-text');
+    if (btn && btnText) {
+      btn.disabled = true;
+      btnText.textContent = 'Signing in...';
+    }
+  });
 </script>
 {% endblock %}

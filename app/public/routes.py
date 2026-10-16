@@ -8,13 +8,35 @@ from app.public import public_bp
 
 
 @public_bp.route("/login")
+@public_bp.route("/owner/login")
 def login_redirect():
-    return redirect(url_for("auth.login"))
+    return redirect(url_for("auth.login", **request.args))
+
+
+@public_bp.route("/resident/login")
+@public_bp.route("/resident-login")
+def resident_login_redirect():
+    return redirect(url_for("auth.resident_login", **request.args))
+
+
+@public_bp.route("/forgot-password")
+def forgot_password_redirect():
+    return redirect(url_for("auth.forgot_password", **request.args))
+
+
+@public_bp.route("/reset-password")
+def reset_password_redirect():
+    return redirect(url_for("auth.reset_password", **request.args))
+
+
+@public_bp.route("/unauthorized")
+def unauthorized_page():
+    return render_template("errors/403.html"), 403
 
 
 @public_bp.route("/register")
 def register_redirect():
-    return redirect(url_for("auth.register"))
+    return redirect(url_for("auth.register", **request.args))
 
 
 @public_bp.route("/")
